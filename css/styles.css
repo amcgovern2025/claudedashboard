@@ -731,6 +731,36 @@ footer {
     margin-left: 0.5rem;
 }
 
+/* Volume Metadata (NIfTI) */
+.volume-file-header {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.volume-load-success {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    background: #eafaf1;
+    border: 1px solid #a9dfbf;
+    border-left: 4px solid var(--color-accent);
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    color: #1e8449;
+    font-weight: 500;
+}
+
+.volume-load-success svg {
+    flex-shrink: 0;
+    color: var(--color-accent);
+}
+
 /* Print styles */
 @media print {
     header { background: white; color: var(--color-text); }

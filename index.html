@@ -6,6 +6,7 @@
     <title>Brain MRI Analysis — Mosconi Research Framework</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://unpkg.com/dicom-parser@1.8.21/dist/dicomParser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nifti-reader-js"></script>
 </head>
 <body>
     <header>
@@ -26,9 +27,9 @@
         <section id="upload-section" class="panel">
             <h2>Upload Brain MRI</h2>
             <p class="section-info">
-                Upload DICOM files (.dcm) — the standard format provided by hospital radiology departments.
-                When you request your imaging records, the radiology department will provide files in this format
-                on a CD, USB drive, or via a patient portal.
+                Upload NIfTI (.nii, .nii.gz), NRRD (.nrrd), DICOM (.dcm), or standard image files.
+                NIfTI and DICOM are the standard formats provided by hospital radiology departments
+                and neuroimaging research tools.
             </p>
             <div id="drop-zone" class="drop-zone">
                 <div class="drop-zone-content">
@@ -37,16 +38,22 @@
                         <polyline points="17 8 12 3 7 8"/>
                         <line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
-                    <p class="drop-text">Drag &amp; drop DICOM files here</p>
+                    <p class="drop-text">Drag &amp; drop brain MRI files here</p>
                     <p class="drop-subtext">or</p>
                     <label class="file-btn">
                         Browse Files
-                        <input type="file" id="file-input" accept=".dcm,.dicom,.DCM,.DICOM" multiple hidden>
+                        <input type="file" id="file-input" accept=".nii,.nii.gz,.nrrd,.dcm,.dicom,.DCM,.DICOM,.png,.jpg,.jpeg" multiple hidden>
                     </label>
-                    <p class="format-note">Accepted: DICOM (.dcm) files — standard hospital radiology format</p>
+                    <p class="format-note">Accepted: NIfTI (.nii, .nii.gz), NRRD (.nrrd), DICOM (.dcm), and image files (.png, .jpg)</p>
                 </div>
             </div>
             <div id="file-list" class="file-list" hidden></div>
+        </section>
+
+        <!-- Volume Metadata Section (NIfTI / NRRD) -->
+        <section id="volume-metadata-section" class="panel" hidden>
+            <h2>Volume Metadata</h2>
+            <div id="volume-metadata-content"></div>
         </section>
 
         <!-- Viewer + Analysis Layout -->
@@ -142,6 +149,7 @@
     </footer>
 
     <script src="js/dicom-handler.js"></script>
+    <script src="js/nifti-handler.js"></script>
     <script src="js/analysis-engine.js"></script>
     <script src="js/app.js"></script>
 </body>

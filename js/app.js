@@ -23,6 +23,8 @@
     const metadataGrid = document.getElementById('dicom-metadata');
     const analysisLoading = document.getElementById('analysis-loading');
     const analysisResults = document.getElementById('analysis-results');
+    const volumeMetadataSection = document.getElementById('volume-metadata-section');
+    const volumeMetadataContent = document.getElementById('volume-metadata-content');
 
     /* ======== File Upload Handling ======== */
 
@@ -55,8 +57,19 @@
         }
     });
 
+    /* ======== File Type Detection ======== */
+
+    function getFileType(filename) {
+        const name = filename.toLowerCase();
+        if (name.endsWith('.nii.gz') || name.endsWith('.nii')) return 'nifti';
+        if (name.endsWith('.dcm') || name.endsWith('.dicom')) return 'dicom';
+        if (name.endsWith('.nrrd')) return 'nrrd';
+        if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image';
+        return 'unsupported';
+    }
+
     /**
-     * Process uploaded files.
+     * Process uploaded files — detects type and routes to the appropriate handler.
      */
     async function handleFiles(fileHandles) {
         const files = Array.from(fileHandles);
@@ -72,12 +85,39 @@
             fileList.appendChild(chip);
         }
 
-        // Read all files
+        // Detect file type from the first file
+        const primaryType = getFileType(files[0].name);
+
+        if (primaryType === 'unsupported') {
+            showError('Unsupported file format. Please upload .nii, .nii.gz, .nrrd, or image files.');
+            return;
+        }
+
+        // Read all files as ArrayBuffers (except for image files)
+        if (primaryType === 'image') {
+            handleImageFiles(files);
+            return;
+        }
+
         const buffers = await Promise.all(
             files.map(f => f.arrayBuffer().then(buffer => ({ buffer, name: f.name })))
         );
 
-        // Parse DICOM files
+        if (primaryType === 'nifti') {
+            handleNiftiFiles(buffers);
+        } else if (primaryType === 'dicom') {
+            handleDicomFiles(buffers);
+        } else if (primaryType === 'nrrd') {
+            handleNrrdFiles(buffers);
+        }
+    }
+
+    /**
+     * Handle DICOM file uploads (existing functionality).
+     */
+    function handleDicomFiles(buffers) {
+        volumeMetadataSection.hidden = true;
+
         try {
             const result = DicomHandler.parseFiles(buffers);
 
@@ -109,6 +149,125 @@
             showError(`Error parsing DICOM files: ${err.message}. Ensure these are valid DICOM files (.dcm format).`);
             console.error(err);
         }
+    }
+
+    /**
+     * Handle NIfTI file uploads (.nii, .nii.gz).
+     * Parses header, extracts volume metadata, displays it.
+     */
+    function handleNiftiFiles(buffers) {
+        resultsSection.hidden = true;
+        volumeMetadataSection.hidden = false;
+
+        try {
+            const results = [];
+            for (const { buffer, name } of buffers) {
+                const meta = NiftiHandler.parseFile(buffer, name);
+                results.push(meta);
+            }
+            displayVolumeMetadata(results);
+        } catch (err) {
+            volumeMetadataSection.hidden = true;
+            showError('Error parsing NIfTI file: ' + err.message);
+            console.error(err);
+        }
+    }
+
+    /**
+     * Handle NRRD file uploads.
+     * Accepts the file and confirms loading (no deep parsing without an NRRD library).
+     */
+    function handleNrrdFiles(buffers) {
+        resultsSection.hidden = true;
+        volumeMetadataSection.hidden = false;
+        volumeMetadataContent.innerHTML = '';
+
+        const info = document.createElement('div');
+        info.className = 'volume-load-success';
+        info.innerHTML =
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>' +
+            '<polyline points="22 4 12 14.01 9 11.01"/></svg> ' +
+            'NRRD file detected (' + buffers.map(b => b.name).join(', ') + '). ' +
+            'File loaded successfully. Full NRRD metadata parsing requires additional library support.';
+        volumeMetadataContent.appendChild(info);
+    }
+
+    /**
+     * Handle image file uploads (.png, .jpg, .jpeg).
+     * Displays the image on the MRI canvas.
+     */
+    function handleImageFiles(files) {
+        volumeMetadataSection.hidden = true;
+        resultsSection.hidden = false;
+
+        const viewerPanel = resultsSection.querySelector('.viewer-panel');
+        if (viewerPanel) viewerPanel.style.display = '';
+        const analysisPanel = resultsSection.querySelector('.analysis-panel');
+        if (analysisPanel) analysisPanel.style.display = 'none';
+
+        const file = files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    /* ======== Volume Metadata Display (NIfTI) ======== */
+
+    function displayVolumeMetadata(niftiResults) {
+        volumeMetadataContent.innerHTML = '';
+
+        for (const meta of niftiResults) {
+            if (niftiResults.length > 1) {
+                const fileHeader = document.createElement('div');
+                fileHeader.className = 'volume-file-header';
+                fileHeader.textContent = meta.filename;
+                volumeMetadataContent.appendChild(fileHeader);
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'metadata-grid';
+
+            const fields = [
+                ['Filename', meta.filename],
+                ['Compressed', meta.compressed ? 'Yes (.nii.gz)' : 'No (.nii)'],
+                ['Num Dimensions', meta.numDims],
+                ['Dimensions (voxels)', meta.dims.join(' \u00d7 ')],
+                ['Voxel Spacing (mm)', meta.pixDims.map(function (v) { return v.toFixed(4); }).join(' \u00d7 ')],
+                ['Datatype', meta.datatypeName],
+                ['Bits Per Voxel', meta.numBitsPerVoxel],
+                ['Description', meta.description || 'N/A']
+            ];
+
+            for (const [label, value] of fields) {
+                const item = document.createElement('div');
+                item.className = 'meta-item';
+                item.innerHTML = '<span class="meta-label">' + label + '</span>' +
+                    '<span class="meta-value">' + value + '</span>';
+                grid.appendChild(item);
+            }
+
+            volumeMetadataContent.appendChild(grid);
+        }
+
+        // Success confirmation
+        const successDiv = document.createElement('div');
+        successDiv.className = 'volume-load-success';
+        successDiv.innerHTML =
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>' +
+            '<polyline points="22 4 12 14.01 9 11.01"/></svg> ' +
+            'File loaded successfully. Volume metadata extracted.';
+        volumeMetadataContent.appendChild(successDiv);
     }
 
     /* ======== Viewer Controls ======== */
