@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain MRI Analysis — Mosconi Research Framework</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://unpkg.com/dicom-parser@1.8.21/dist/dicomParser.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Brain MRI Analysis Tool</h1>
+            <p class="subtitle">Based on the neurodiagnostic research framework of Dr. Lisa Mosconi</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="disclaimer-banner">
+            <strong>Research &amp; Educational Tool Only.</strong> This tool provides image analysis
+            based on published neuroscience research. It is not a clinical diagnostic instrument.
+            Always consult a qualified physician for medical interpretation of brain imaging.
+        </div>
+
+        <!-- Upload Section -->
+        <section id="upload-section" class="panel">
+            <h2>Upload Brain MRI</h2>
+            <p class="section-info">
+                Upload DICOM files (.dcm) — the standard format provided by hospital radiology departments.
+                When you request your imaging records, the radiology department will provide files in this format
+                on a CD, USB drive, or via a patient portal.
+            </p>
+            <div id="drop-zone" class="drop-zone">
+                <div class="drop-zone-content">
+                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p class="drop-text">Drag &amp; drop DICOM files here</p>
+                    <p class="drop-subtext">or</p>
+                    <label class="file-btn">
+                        Browse Files
+                        <input type="file" id="file-input" accept=".dcm,.dicom,.DCM,.DICOM" multiple hidden>
+                    </label>
+                    <p class="format-note">Accepted: DICOM (.dcm) files — standard hospital radiology format</p>
+                </div>
+            </div>
+            <div id="file-list" class="file-list" hidden></div>
+        </section>
+
+        <!-- Viewer + Analysis Layout -->
+        <section id="results-section" class="results-layout" hidden>
+            <!-- Image Viewer -->
+            <div class="panel viewer-panel">
+                <h2>MRI Viewer</h2>
+                <div class="viewer-controls">
+                    <div class="control-group">
+                        <label>Window Center</label>
+                        <input type="range" id="wc-slider" min="0" max="4095" value="40">
+                        <span id="wc-value">40</span>
+                    </div>
+                    <div class="control-group">
+                        <label>Window Width</label>
+                        <input type="range" id="ww-slider" min="1" max="4095" value="400">
+                        <span id="ww-value">400</span>
+                    </div>
+                    <div class="control-group">
+                        <label>Slice</label>
+                        <input type="range" id="slice-slider" min="0" max="0" value="0">
+                        <span id="slice-value">1 / 1</span>
+                    </div>
+                    <button id="invert-btn" class="ctrl-btn">Invert</button>
+                    <button id="reset-btn" class="ctrl-btn">Reset</button>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="mri-canvas" width="512" height="512"></canvas>
+                </div>
+                <div id="dicom-metadata" class="metadata-grid" hidden></div>
+            </div>
+
+            <!-- Analysis Results -->
+            <div class="panel analysis-panel">
+                <h2>Mosconi Framework Analysis</h2>
+                <div id="analysis-loading" class="loading" hidden>
+                    <div class="spinner"></div>
+                    <p>Analyzing MRI data...</p>
+                </div>
+                <div id="analysis-results"></div>
+            </div>
+        </section>
+
+        <!-- Research Reference -->
+        <section class="panel research-panel">
+            <h2>Research Foundation</h2>
+            <p class="section-info">
+                This analysis framework is informed by Dr. Lisa Mosconi's body of research
+                at the Weill Cornell Women's Brain Initiative. Key research areas include:
+            </p>
+            <div class="research-grid">
+                <div class="research-card">
+                    <h3>Brain Metabolism</h3>
+                    <p>Reduced cerebral glucose metabolism as an early Alzheimer's biomarker,
+                       often preceding structural atrophy by years.</p>
+                </div>
+                <div class="research-card">
+                    <h3>Structural MRI Biomarkers</h3>
+                    <p>Gray matter volume, white matter integrity, and hippocampal measurements
+                       as indicators of brain health and dementia risk.</p>
+                </div>
+                <div class="research-card">
+                    <h3>Regional Vulnerability</h3>
+                    <p>Focus on hippocampus, posterior cingulate cortex, medial temporal lobe,
+                       and entorhinal cortex as early-affected regions.</p>
+                </div>
+                <div class="research-card">
+                    <h3>Sex Differences &amp; Hormones</h3>
+                    <p>Menopause-related changes in brain structure, connectivity, and
+                       energy metabolism as an Alzheimer's risk window.</p>
+                </div>
+                <div class="research-card">
+                    <h3>Nutrition &amp; Lifestyle</h3>
+                    <p>Mediterranean diet associations with reduced brain atrophy and lower
+                       amyloid biomarker burden.</p>
+                </div>
+                <div class="research-card">
+                    <h3>Familial Risk</h3>
+                    <p>Increased fibrillar amyloid-β burden in individuals with family history
+                       of late-onset Alzheimer's disease.</p>
+                </div>
+            </div>
+            <p class="reference-link">
+                Reference: <a href="https://www.lisamosconi.com/research" target="_blank" rel="noopener">
+                Dr. Lisa Mosconi — Research Publications</a>
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Brain MRI Analysis Tool — Based on published neuroscience research by Dr. Lisa Mosconi.</p>
+        <p class="footer-disclaimer">For educational and research purposes only. Not a diagnostic tool.</p>
+    </footer>
+
+    <script src="js/dicom-handler.js"></script>
+    <script src="js/analysis-engine.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
