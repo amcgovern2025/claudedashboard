@@ -86,8 +86,12 @@
                 return;
             }
 
-            // Show results section
+            // Show results section and restore viewer if previously hidden
             resultsSection.hidden = false;
+            const viewerPanel = resultsSection.querySelector('.viewer-panel');
+            if (viewerPanel) viewerPanel.style.display = '';
+            const analysisPanel = resultsSection.querySelector('.analysis-panel');
+            if (analysisPanel) analysisPanel.style.gridColumn = '';
 
             // Setup viewer controls
             setupViewerControls(result);
@@ -253,6 +257,39 @@
         const scoreCard = createScoreCard(results.brainHealthScore);
         analysisResults.appendChild(scoreCard);
 
+        // Mosconi context explanation for the score
+        const scoreExplanation = createMosconiExplanation(
+            'Understanding Your Composite Score',
+            `This score is derived from five components of structural MRI analysis, weighted ` +
+            `according to their diagnostic significance in Mosconi's research framework. ` +
+            `Tissue balance and structural integrity receive the highest weight (25% each) ` +
+            `because Mosconi's longitudinal studies show gray matter volume loss and brain ` +
+            `parenchyma reduction are among the earliest detectable structural biomarkers — ` +
+            `often appearing years before clinical symptoms of cognitive decline.`,
+            'Mosconi et al., "Brain glucose metabolism in the early and specific diagnosis of Alzheimer\'s disease," European Journal of Nuclear Medicine, 2005'
+        );
+        analysisResults.appendChild(scoreExplanation);
+
+        // ====== Recommended Reading vs Your Reading ======
+        const comparisonSection = createReadingComparison(results);
+        analysisResults.appendChild(comparisonSection);
+
+        // Mosconi explanation for the comparison
+        const compExplanation = createMosconiExplanation(
+            'Why These Ranges Matter',
+            `The recommended ranges are derived from Mosconi's structural MRI research on healthy brain aging. ` +
+            `Gray matter proportion reflects neuronal density — Mosconi's work shows that women in particular ` +
+            `can experience accelerated gray matter changes during perimenopause. The GM/WM ratio helps distinguish ` +
+            `normal age-related changes from pathological atrophy patterns. Brain parenchyma fraction is the most ` +
+            `robust single structural biomarker: values below 55% correlate strongly with increased CSF space, ` +
+            `suggesting ventricular enlargement or sulcal widening — hallmarks of neurodegeneration. ` +
+            `Hemispheric symmetry above 85% indicates balanced bilateral structure; asymmetry in the medial temporal ` +
+            `regions specifically may point toward early hippocampal changes that Mosconi identifies as a key ` +
+            `Alzheimer's risk signal.`,
+            'Mosconi et al., "Reduced hippocampal metabolism in MCI and AD," Neurology, 2005; Mosconi, "Glucose metabolism in normal aging and Alzheimer\'s disease," 2013'
+        );
+        analysisResults.appendChild(compExplanation);
+
         // Sub-scores
         const subScoresSection = createSection('Component Scores', true);
         const subBody = subScoresSection.querySelector('.analysis-section-body');
@@ -290,13 +327,68 @@
         histBody.appendChild(statsP);
         analysisResults.appendChild(histSection);
 
-        // Findings sections
+        // Findings sections with Mosconi explanations
+        const findingExplanations = {
+            'Tissue Composition (Mosconi Structural Biomarkers)': {
+                title: 'Mosconi on Tissue Composition',
+                body: `In Mosconi's framework, tissue composition from structural MRI serves as a proxy ` +
+                    `for what FDG-PET measures metabolically. Regions with gray matter loss on MRI ` +
+                    `correspond closely to areas showing hypometabolism on PET. Her research demonstrated ` +
+                    `that the ratio of gray matter to total brain volume decreases at predictable rates ` +
+                    `in healthy aging (~0.5% per year after age 60), but accelerates significantly ` +
+                    `(1-2% per year) in preclinical Alzheimer's — often a decade before diagnosis.`,
+                citation: 'Mosconi et al., "MCI conversion to dementia and the APOE genotype," Neurology, 2007'
+            },
+            'Regional Analysis (Mosconi Key Brain Regions)': {
+                title: 'Mosconi on Regional Vulnerability',
+                body: `Mosconi's PET and MRI research established a hierarchy of regional vulnerability ` +
+                    `in Alzheimer's disease. The hippocampus and entorhinal cortex show changes first, ` +
+                    `followed by the posterior cingulate cortex, then lateral temporal and parietal lobes. ` +
+                    `The frontal lobes are typically affected later. This "Braak staging" pattern on structural ` +
+                    `MRI mirrors Mosconi's metabolic findings, making regional intensity comparison valuable ` +
+                    `even without PET imaging. Her work also shows that individuals with a maternal family ` +
+                    `history of Alzheimer's show these regional changes earlier than those with paternal history.`,
+                citation: 'Mosconi et al., "Maternal family history of Alzheimer\'s disease predisposes to reduced brain glucose metabolism," PNAS, 2007'
+            },
+            'Hemispheric Symmetry': {
+                title: 'Mosconi on Brain Symmetry',
+                body: `While Mosconi's primary focus is metabolic imaging, her structural MRI work ` +
+                    `confirms that healthy brains maintain high bilateral symmetry. Asymmetric atrophy ` +
+                    `— particularly in the medial temporal lobes — is associated with lateralized ` +
+                    `pathology and can help distinguish Alzheimer's (typically symmetric early on) from ` +
+                    `frontotemporal dementia (often asymmetric). Temporal lobe asymmetry above 10% ` +
+                    `warrants closer clinical attention in her framework.`,
+                citation: 'Mosconi, "Brain glucose metabolism in the early and specific diagnosis of Alzheimer\'s disease," European Journal of Nuclear Medicine, 2005'
+            },
+            'Brain Atrophy Indicators': {
+                title: 'Mosconi on Brain Atrophy',
+                body: `Brain atrophy assessment is central to Mosconi's structural biomarker research. ` +
+                    `Her studies show that brain parenchyma fraction (the ratio of brain tissue to total ` +
+                    `intracranial volume) declines with age but that the rate of decline is a stronger ` +
+                    `predictor of cognitive outcomes than the absolute value. Importantly, Mosconi's ` +
+                    `nutrition research demonstrates that Mediterranean diet adherence is associated ` +
+                    `with 1.5-2.0% greater brain volume preservation over 5 years compared to ` +
+                    `Western dietary patterns — an effect she attributes to anti-inflammatory and ` +
+                    `antioxidant neuroprotection.`,
+                citation: 'Mosconi et al., "Mediterranean diet and brain structure in a multiethnic elderly cohort," Neurology, 2014'
+            }
+        };
+
         for (const finding of results.findings) {
             const section = createSection(finding.category, true);
             const body = section.querySelector('.analysis-section-body');
             for (const item of finding.items) {
                 body.appendChild(createFindingItem(item));
             }
+
+            // Add Mosconi explanation after each finding category
+            const explanation = findingExplanations[finding.category];
+            if (explanation) {
+                body.appendChild(createMosconiExplanation(
+                    explanation.title, explanation.body, explanation.citation
+                ));
+            }
+
             analysisResults.appendChild(section);
         }
 
@@ -331,8 +423,133 @@
         recBody.appendChild(recList);
         analysisResults.appendChild(recSection);
 
+        // Save analysis to localStorage for persistence
+        saveAnalysisState(results);
+
         // Scroll to results
         resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    /* ======== Recommended Reading Comparison ======== */
+
+    function createReadingComparison(results) {
+        const container = document.createElement('div');
+        container.className = 'reading-comparison';
+
+        const header = document.createElement('div');
+        header.className = 'reading-comparison-header';
+        header.textContent = 'Recommended Reading vs. Your Reading';
+        container.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'reading-comparison-body';
+
+        // Header row
+        const headerRow = document.createElement('div');
+        headerRow.className = 'reading-row header-row';
+        headerRow.innerHTML = `
+            <span>Metric</span>
+            <span style="text-align:center">Recommended</span>
+            <span style="text-align:center">Your Reading</span>
+            <span style="text-align:center">Status</span>
+        `;
+        body.appendChild(headerRow);
+
+        const tissue = results.tissueComposition;
+        const symmetry = results.symmetry;
+        const atrophy = results.atrophy;
+        const texture = results.texture;
+
+        // Define comparison rows
+        const comparisons = [
+            {
+                metric: 'Gray Matter',
+                recommended: '35–45%',
+                yours: `${(tissue.grayMatter * 100).toFixed(1)}%`,
+                status: tissue.grayMatter > 0.35 ? 'good' :
+                    tissue.grayMatter > 0.25 ? 'moderate' : 'concern'
+            },
+            {
+                metric: 'White Matter',
+                recommended: '25–40%',
+                yours: `${(tissue.whiteMatter * 100).toFixed(1)}%`,
+                status: tissue.whiteMatter > 0.25 ? 'good' :
+                    tissue.whiteMatter > 0.15 ? 'moderate' : 'concern'
+            },
+            {
+                metric: 'GM/WM Ratio',
+                recommended: '1.0–1.5',
+                yours: tissue.gmToWmRatio.toFixed(2),
+                status: (tissue.gmToWmRatio > 0.8 && tissue.gmToWmRatio < 2.0) ? 'good' :
+                    (tissue.gmToWmRatio > 0.5 && tissue.gmToWmRatio < 2.5) ? 'moderate' : 'concern'
+            },
+            {
+                metric: 'CSF Proportion',
+                recommended: '< 15%',
+                yours: `${(tissue.csf * 100).toFixed(1)}%`,
+                status: tissue.csf < 0.15 ? 'good' :
+                    tissue.csf < 0.25 ? 'moderate' : 'concern'
+            },
+            {
+                metric: 'Brain Parenchyma',
+                recommended: '> 70%',
+                yours: `${(atrophy.brainParenchymaFraction * 100).toFixed(1)}%`,
+                status: atrophy.brainParenchymaFraction > 0.7 ? 'good' :
+                    atrophy.brainParenchymaFraction > 0.55 ? 'moderate' : 'concern'
+            },
+            {
+                metric: 'Hemispheric Symmetry',
+                recommended: '> 85',
+                yours: symmetry.symmetryScore.toFixed(1),
+                status: symmetry.symmetryScore > 85 ? 'good' :
+                    symmetry.symmetryScore > 70 ? 'moderate' : 'concern'
+            },
+            {
+                metric: 'Temporal Asymmetry',
+                recommended: '< 5%',
+                yours: `${(symmetry.temporalAsymmetry * 100).toFixed(1)}%`,
+                status: symmetry.temporalAsymmetry < 0.05 ? 'good' :
+                    symmetry.temporalAsymmetry < 0.10 ? 'moderate' : 'concern'
+            },
+            {
+                metric: 'Tissue Homogeneity',
+                recommended: '> 60',
+                yours: texture.homogeneityScore.toFixed(1),
+                status: texture.homogeneityScore > 60 ? 'good' :
+                    texture.homogeneityScore > 40 ? 'moderate' : 'concern'
+            }
+        ];
+
+        for (const row of comparisons) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'reading-row';
+            rowDiv.innerHTML = `
+                <span class="reading-metric">${row.metric}</span>
+                <span class="reading-recommended">${row.recommended}</span>
+                <span class="reading-yours" style="color: var(--color-${row.status === 'good' ? 'accent' : row.status === 'moderate' ? 'warning' : 'danger'})">${row.yours}</span>
+                <span class="reading-status"><span class="status-dot ${row.status}" title="${row.status}"></span></span>
+            `;
+            body.appendChild(rowDiv);
+        }
+
+        container.appendChild(body);
+        return container;
+    }
+
+    /* ======== Mosconi Explanation Builder ======== */
+
+    function createMosconiExplanation(title, bodyText, citation) {
+        const div = document.createElement('div');
+        div.className = 'mosconi-explanation';
+        div.innerHTML = `
+            <div class="explanation-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                ${title}
+            </div>
+            <div class="explanation-body">${bodyText}</div>
+            ${citation ? `<span class="explanation-citation">${citation}</span>` : ''}
+        `;
+        return div;
     }
 
     /* ======== UI Component Builders ======== */
@@ -451,5 +668,88 @@
         document.querySelector('main').insertBefore(errDiv, resultsSection);
         setTimeout(() => errDiv.remove(), 10000);
     }
+
+    /* ======== LocalStorage Persistence ======== */
+
+    const STORAGE_KEY = 'mri_analysis_state';
+
+    function saveAnalysisState(results) {
+        try {
+            const stateToSave = {
+                timestamp: Date.now(),
+                brainHealthScore: results.brainHealthScore,
+                tissueComposition: results.tissueComposition,
+                symmetry: results.symmetry,
+                atrophy: results.atrophy,
+                texture: results.texture,
+                globalStats: results.globalStats,
+                histogram: results.histogram,
+                findings: results.findings,
+                recommendations: results.recommendations,
+                volumetric: results.volumetric,
+                metadata: results.metadata,
+                sliceCount: results.sliceCount,
+                imageSize: results.imageSize,
+                fileNames: getSavedFileNames()
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+        } catch (e) {
+            console.warn('Could not save analysis state:', e.message);
+        }
+    }
+
+    function getSavedFileNames() {
+        const chips = fileList.querySelectorAll('.file-chip');
+        return Array.from(chips).map(chip => chip.textContent.trim());
+    }
+
+    function loadSavedState() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return;
+
+            const state = JSON.parse(saved);
+            if (!state || !state.brainHealthScore) return;
+
+            // Restore file chips
+            if (state.fileNames && state.fileNames.length > 0) {
+                fileList.innerHTML = '';
+                fileList.hidden = false;
+                for (const name of state.fileNames) {
+                    const chip = document.createElement('span');
+                    chip.className = 'file-chip';
+                    chip.textContent = name;
+                    fileList.appendChild(chip);
+                }
+            }
+
+            // Show results section (without viewer since we don't have pixel data)
+            resultsSection.hidden = false;
+
+            // Hide the viewer panel since we can't restore raw pixel data
+            const viewerPanel = resultsSection.querySelector('.viewer-panel');
+            if (viewerPanel) viewerPanel.style.display = 'none';
+
+            // Expand the analysis panel to full width when viewer is hidden
+            const analysisPanel = resultsSection.querySelector('.analysis-panel');
+            if (analysisPanel) analysisPanel.style.gridColumn = '1 / -1';
+
+            // Render the saved analysis results
+            renderAnalysisResults(state);
+
+            // Add a restored indicator
+            const indicator = document.createElement('span');
+            indicator.className = 'persist-indicator';
+            indicator.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Saved session restored`;
+            const heading = analysisPanel.querySelector('h2');
+            if (heading) heading.appendChild(indicator);
+
+        } catch (e) {
+            console.warn('Could not restore analysis state:', e.message);
+        }
+    }
+
+    // On page load, restore saved state if available
+    loadSavedState();
 
 })();
