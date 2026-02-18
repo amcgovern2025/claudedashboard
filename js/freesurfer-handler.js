@@ -105,6 +105,18 @@ const FreeSurferHandler = (() => {
         const measures = {};
         let etiv = null;
 
+        // Determine column positions from # ColHeaders line (if present).
+        // Standard FreeSurfer: Index SegId NVoxels Volume_mm3 StructName → vol=3, name=4
+        // Some SynthSeg builds omit Index:   SegId NVoxels Volume_mm3 StructName → vol=2, name=3
+        let volCol = 3, nameCol = 4;
+        const colHeaderLine = text.split('\n').find(l => /ColHeaders/.test(l));
+        if (colHeaderLine) {
+            const headers = colHeaderLine.replace(/^#\s*ColHeaders\s*/i, '').trim().split(/\s+/);
+            const vi = headers.indexOf('Volume_mm3');
+            const ni = headers.indexOf('StructName');
+            if (vi !== -1 && ni !== -1) { volCol = vi; nameCol = ni; }
+        }
+
         for (const rawLine of text.split('\n')) {
             const line = rawLine.trimEnd();
 
@@ -121,18 +133,22 @@ const FreeSurferHandler = (() => {
                 continue;
             }
 
-            // Data rows: Index SegId NVoxels Volume_mm3 StructName ...
+            // Data rows
             const parts = line.trim().split(/\s+/);
-            if (parts.length < 5) continue;
+            if (parts.length <= nameCol) continue;
 
-            const volumeMm3 = parseFloat(parts[3]);
+            const volumeMm3 = parseFloat(parts[volCol]);
             if (isNaN(volumeMm3)) continue;
 
-            const structName = parts[4];
+            const structName = parts[nameCol];
             const roiKey = STRUCT_MAP[structName];
             if (roiKey) regions[roiKey] = volumeMm3;
+            else console.log('[aseg.stats] Unmapped structure:', structName, volumeMm3.toFixed(1));
         }
 
+        console.log('[aseg.stats] ColHeaders → vol col', volCol, 'name col', nameCol);
+        console.log('[aseg.stats] Measures from header:', measures);
+        console.log('[aseg.stats] Regions matched:', regions);
         return { regions, etiv, measures };
     }
 
