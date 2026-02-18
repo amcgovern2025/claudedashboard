@@ -97,6 +97,87 @@
             </div>
         </section>
 
+        <!-- ═══ SynthSeg Volumetrics Dashboard ═══ -->
+        <section id="vm-dashboard" class="panel">
+            <h2>
+                SynthSeg Volumetrics Results
+                <span id="vm-data-source" class="vm-source-badge" hidden></span>
+            </h2>
+
+            <!-- Demo mode warning -->
+            <div id="vm-demo-banner" class="vm-demo-banner" hidden>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span><strong>Demo mode</strong> — showing sample data. Commit
+                    <code>brain_metrics_summary.csv</code> to your repo root, or upload your files below.</span>
+            </div>
+
+            <!-- Status line -->
+            <div id="vm-status" class="vm-status" hidden></div>
+
+            <!-- Load controls (file upload fallback + always-visible refresh) -->
+            <div id="vm-load-controls" class="vm-load-controls" hidden>
+                <div class="vm-load-row">
+                    <div class="vm-load-item">
+                        <span class="vm-load-label">brain_metrics_summary.csv</span>
+                        <label class="file-btn">
+                            Upload CSV
+                            <input type="file" id="vm-csv-input" accept=".csv" hidden>
+                        </label>
+                    </div>
+                    <div class="vm-load-item">
+                        <span class="vm-load-label">brain_metrics_plot.png <em style="font-weight:400">(optional)</em></span>
+                        <label class="file-btn">
+                            Upload Plot
+                            <input type="file" id="vm-png-input" accept=".png,.jpg,.jpeg" hidden>
+                        </label>
+                    </div>
+                </div>
+                <p class="vm-load-hint">
+                    On GitHub Pages, commit <code>brain_metrics_summary.csv</code> and
+                    <code>brain_metrics_plot.png</code> to the repo root — they load automatically.
+                    See <code>DEPLOY.md</code> for full instructions.
+                </p>
+            </div>
+
+            <!-- Subject selector (only shown for multi-subject CSVs) -->
+            <div id="vm-subject-bar" class="vm-subject-bar" hidden>
+                <label for="vm-subject-select">Subject:</label>
+                <select id="vm-subject-select"></select>
+            </div>
+
+            <!-- Metric cards -->
+            <div id="vm-cards" class="vm-cards" hidden></div>
+
+            <!-- Summary plot -->
+            <div id="vm-plot-wrapper" class="vm-plot-wrapper" hidden>
+                <h3 class="vm-section-label">Segmentation Summary Plot</h3>
+                <img id="vm-plot-img" class="vm-plot-img"
+                     alt="Brain metrics summary plot — raw volumes, ICV-normalised volumes, and hemispheric asymmetry">
+            </div>
+
+            <!-- Full regional volumes table -->
+            <div id="vm-table-wrapper" class="vm-table-wrapper" hidden>
+                <h3 class="vm-section-label">All Regional Volumes <small style="font-weight:400;color:#7f8c8d">(click headers to sort)</small></h3>
+                <div class="vm-table-scroll">
+                    <table id="vm-table" class="vm-table">
+                        <thead>
+                            <tr>
+                                <th data-col="label">Region<span class="vm-sort-icon"> ⇅</span></th>
+                                <th data-col="system">System<span class="vm-sort-icon"> ⇅</span></th>
+                                <th data-col="volume_cm3" style="text-align:right">Volume (cm³)<span class="vm-sort-icon"> ⇅</span></th>
+                                <th data-col="volume_mm3" style="text-align:right">Volume (mm³)<span class="vm-sort-icon"> ⇅</span></th>
+                                <th data-col="volume_pct_icv" style="text-align:right">% ICV<span class="vm-sort-icon"> ⇅</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="vm-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <!-- Research Reference -->
         <section class="panel research-panel">
             <h2>Research Foundation</h2>
@@ -152,5 +233,6 @@
     <script src="js/nifti-handler.js"></script>
     <script src="js/analysis-engine.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/volumetrics-dashboard.js"></script>
 </body>
 </html>
