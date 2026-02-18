@@ -102,17 +102,22 @@ const FreeSurferHandler = (() => {
      */
     function parseAsegStats(text) {
         const regions = {};
+        const measures = {};
         let etiv = null;
 
         for (const rawLine of text.split('\n')) {
             const line = rawLine.trimEnd();
 
             if (line.startsWith('#')) {
-                // e.g. # Measure EstimatedTotalIntraCranialVol, eTIV, ..., 1456789.0, mm^3
-                const m = line.match(
-                    /Measure\s+EstimatedTotalIntraCranialVol[^,]*,[^,]*,\s*[^,]*,\s*([\d.]+)\s*,\s*mm/i
-                );
-                if (m) etiv = parseFloat(m[1]);
+                // Parse all # Measure lines:
+                // # Measure <ShortName>, <LongName>, <Description>, <Value>, mm^3
+                const m = line.match(/Measure\s+([\w-]+)\s*,[^,]*,[^,]*,\s*([\d.]+)\s*,\s*mm/i);
+                if (m) {
+                    const key = m[1];
+                    const val = parseFloat(m[2]);
+                    measures[key] = val;
+                    if (/EstimatedTotalIntraCranialVol/i.test(key)) etiv = val;
+                }
                 continue;
             }
 
@@ -128,7 +133,7 @@ const FreeSurferHandler = (() => {
             if (roiKey) regions[roiKey] = volumeMm3;
         }
 
-        return { regions, etiv };
+        return { regions, etiv, measures };
     }
 
     // ── Metrics computation ───────────────────────────────────────────────
@@ -184,7 +189,7 @@ const FreeSurferHandler = (() => {
         const reader = new FileReader();
         reader.onload = e => {
             const text = e.target.result;
-            const { regions, etiv } = parseAsegStats(text);
+            const { regions, etiv, measures } = parseAsegStats(text);
 
             if (!Object.keys(regions).length) {
                 showStatus(
@@ -212,7 +217,7 @@ const FreeSurferHandler = (() => {
 
             // Populate the Mosconi Framework section from volumetric data
             if (window.AppController && window.AppController.renderVolumetricAnalysis) {
-                window.AppController.renderVolumetricAnalysis(regions, etiv);
+                window.AppController.renderVolumetricAnalysis(regions, etiv, measures);
             }
         };
 

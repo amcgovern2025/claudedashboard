@@ -917,9 +917,11 @@
      * data (aseg.stats) instead of pixel-level MRI image analysis.
      * Called by FreeSurferHandler after a successful aseg.stats parse.
      */
-    function renderVolumetricAnalysis(regions, etiv) {
+    function renderVolumetricAnalysis(regions, etiv, measures) {
         // Clear stale pixel-analysis session so old numbers don't bleed through
         try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+
+        measures = measures || {};
 
         // ── Tissue volumes (mm³) ──────────────────────────────────────────
         const gm_mm3 = (regions.cortex_L      || 0) + (regions.cortex_R      || 0)
@@ -930,18 +932,30 @@
                      + (regions.putamen_L      || 0) + (regions.putamen_R      || 0)
                      + (regions.cerebellum_L   || 0) + (regions.cerebellum_R   || 0);
 
-        const wm_mm3  = (regions.wm_L || 0) + (regions.wm_R || 0);
+        // White matter: prefer structure rows, fall back to # Measure header values
+        // (SynthSeg may not emit WM as separate structure rows)
+        const wm_from_rows = (regions.wm_L || 0) + (regions.wm_R || 0);
+        const wm_mm3 = wm_from_rows > 0 ? wm_from_rows
+            : (measures.CerebralWhiteMatter || 0)
+           || ((measures.lhCerebralWhiteMatter || 0) + (measures.rhCerebralWhiteMatter || 0))
+           || ((measures.lhWhiteSurfVol || 0) + (measures.rhWhiteSurfVol || 0));
+
         const csf_mm3 = (regions.lat_ventricle_L || 0) + (regions.lat_ventricle_R || 0)
                       + (regions.ventricle_3rd   || 0) + (regions.ventricle_4th   || 0);
 
-        const brain_mm3 = gm_mm3 + wm_mm3 + csf_mm3;
-        const icv_mm3   = etiv || brain_mm3;
+        // Use ICV as denominator for all fractions — correct when not all tissue
+        // classes are present in structure rows (e.g. SynthSeg omits WM rows).
+        const icv_mm3 = etiv || (gm_mm3 + wm_mm3 + csf_mm3);
 
-        const gmFrac      = brain_mm3 > 0 ? gm_mm3  / brain_mm3 : 0;
-        const wmFrac      = brain_mm3 > 0 ? wm_mm3  / brain_mm3 : 0;
-        const csfFrac     = brain_mm3 > 0 ? csf_mm3 / brain_mm3 : 0;
-        const gmWmRatio   = wm_mm3   > 0 ? gm_mm3  / wm_mm3    : 0;
-        const bpf         = icv_mm3  > 0 ? (gm_mm3 + wm_mm3) / icv_mm3 : 0;
+        // Total brain parenchyma: use BrainSeg header measure if available
+        const brainSeg_mm3 = measures.BrainSeg || measures.BrainSegNotVent
+                           || (gm_mm3 + wm_mm3);
+
+        const gmFrac    = icv_mm3 > 0 ? gm_mm3       / icv_mm3 : 0;
+        const wmFrac    = icv_mm3 > 0 ? wm_mm3       / icv_mm3 : 0;
+        const csfFrac   = icv_mm3 > 0 ? csf_mm3      / icv_mm3 : 0;
+        const gmWmRatio = wm_mm3  > 0 ? gm_mm3       / wm_mm3  : null;
+        const bpf       = icv_mm3 > 0 ? brainSeg_mm3 / icv_mm3 : 0;
 
         const hL = regions.hippocampus_L || 0;
         const hR = regions.hippocampus_R || 0;
@@ -951,26 +965,33 @@
 
         // ── Composite score ───────────────────────────────────────────────
         function clamp01(v) { return Math.max(0, Math.min(100, v)); }
-        const scoreGM    = clamp01(gmFrac    >= 0.35 && gmFrac    <= 0.45 ? 100
-                             : gmFrac    < 0.35 ? (gmFrac    / 0.35) * 100
-                             :                   100 - (gmFrac    - 0.45) * 500);
-        const scoreWM    = clamp01(wmFrac    >= 0.25 && wmFrac    <= 0.40 ? 100
-                             : wmFrac    < 0.25 ? (wmFrac    / 0.25) * 100
-                             :                   100 - (wmFrac    - 0.40) * 500);
-        const scoreRatio = clamp01(gmWmRatio >= 1.0  && gmWmRatio <= 1.5  ? 100
-                             : gmWmRatio < 1.0  ? (gmWmRatio / 1.0)  * 100
-                             :                   100 - (gmWmRatio  - 1.5)  * 100);
-        const scoreBPF   = clamp01(bpf       >= 0.70 ? 100 : (bpf / 0.70) * 100);
-        const scoreAsym  = clamp01(hippAsymmetry <= 0.05 ? 100
-                             : 100 - (hippAsymmetry - 0.05) * 1000);
+        const scoreGM   = clamp01(gmFrac >= 0.35 && gmFrac <= 0.45 ? 100
+                            : gmFrac < 0.35 ? (gmFrac / 0.35) * 100
+                            :                100 - (gmFrac - 0.45) * 500);
+        const scoreBPF  = clamp01(bpf >= 0.70 ? 100 : (bpf / 0.70) * 100);
+        const scoreAsym = clamp01(hippAsymmetry <= 0.05 ? 100
+                            : 100 - (hippAsymmetry - 0.05) * 1000);
 
-        const composite  = Math.round(
-            scoreGM    * 0.30 +
-            scoreWM    * 0.20 +
-            scoreRatio * 0.20 +
-            scoreBPF   * 0.20 +
-            scoreAsym  * 0.10
-        );
+        // WM-dependent scores only included when white matter data is available
+        const hasWM = wm_mm3 > 0;
+        const scoreWM    = hasWM ? clamp01(wmFrac >= 0.25 && wmFrac <= 0.40 ? 100
+                               : wmFrac < 0.25 ? (wmFrac / 0.25) * 100
+                               :                100 - (wmFrac - 0.40) * 500) : null;
+        const scoreRatio = hasWM && gmWmRatio !== null ? clamp01(
+                               gmWmRatio >= 1.0 && gmWmRatio <= 1.5 ? 100
+                               : gmWmRatio < 1.0 ? (gmWmRatio / 1.0) * 100
+                               :                  100 - (gmWmRatio - 1.5) * 100) : null;
+
+        // Reweight dynamically: drop WM metrics if unavailable
+        let composite;
+        if (hasWM) {
+            composite = Math.round(
+                scoreGM    * 0.30 + scoreWM  * 0.20 +
+                scoreRatio * 0.20 + scoreBPF * 0.20 + scoreAsym * 0.10);
+        } else {
+            composite = Math.round(
+                scoreGM * 0.40 + scoreBPF * 0.40 + scoreAsym * 0.20);
+        }
         const level = composite >= 75 ? 'good' : composite >= 50 ? 'moderate' : 'concern';
 
         // ── Render ────────────────────────────────────────────────────────
@@ -984,8 +1005,11 @@
         badge.textContent = 'Analysis computed from FreeSurfer volumetric measurements (aseg.stats)';
         analysisResults.appendChild(badge);
 
-        // Score card
-        analysisResults.appendChild(createScoreCard({ composite, level }));
+        // Score card (with explicit /100 label)
+        const scoreCard = createScoreCard({ composite, level });
+        const scoreLabel = scoreCard.querySelector('.score-label');
+        if (scoreLabel) scoreLabel.textContent = 'Brain Health Composite Score (out of 100)';
+        analysisResults.appendChild(scoreCard);
 
         // Mosconi explanation
         analysisResults.appendChild(createMosconiExplanation(
@@ -1023,22 +1047,25 @@
 
         const colorFor = s => s === 'good' ? 'accent' : s === 'moderate' ? 'warning' : 'danger';
         const rows = [
-            { metric: 'Gray Matter',           recommended: '35–45%',
-              yours: `${(gmFrac      * 100).toFixed(1)}%`,
-              status: gmFrac      > 0.35 ? 'good' : gmFrac      > 0.25 ? 'moderate' : 'concern' },
-            { metric: 'White Matter',           recommended: '25–40%',
-              yours: `${(wmFrac      * 100).toFixed(1)}%`,
-              status: wmFrac      > 0.25 ? 'good' : wmFrac      > 0.15 ? 'moderate' : 'concern' },
+            { metric: 'Gray Matter / ICV',      recommended: '35–45%',
+              yours: `${(gmFrac * 100).toFixed(1)}%`,
+              status: gmFrac > 0.35 ? 'good' : gmFrac > 0.25 ? 'moderate' : 'concern' },
+            { metric: 'White Matter / ICV',     recommended: '25–40%',
+              yours: hasWM ? `${(wmFrac * 100).toFixed(1)}%` : 'N/A',
+              status: hasWM ? (wmFrac > 0.25 ? 'good' : wmFrac > 0.15 ? 'moderate' : 'concern') : 'moderate',
+              note: hasWM ? null : 'Not reported by SynthSeg' },
             { metric: 'GM/WM Ratio',            recommended: '1.0–1.5',
-              yours: gmWmRatio.toFixed(2),
-              status: (gmWmRatio > 0.8 && gmWmRatio < 2.0) ? 'good'
-                    : (gmWmRatio > 0.5 && gmWmRatio < 2.5) ? 'moderate' : 'concern' },
-            { metric: 'CSF Proportion',         recommended: '< 15%',
-              yours: `${(csfFrac     * 100).toFixed(1)}%`,
-              status: csfFrac     < 0.15 ? 'good' : csfFrac     < 0.25 ? 'moderate' : 'concern' },
+              yours: gmWmRatio !== null ? gmWmRatio.toFixed(2) : 'N/A',
+              status: gmWmRatio !== null
+                    ? ((gmWmRatio > 0.8 && gmWmRatio < 2.0) ? 'good' : (gmWmRatio > 0.5 && gmWmRatio < 2.5) ? 'moderate' : 'concern')
+                    : 'moderate',
+              note: gmWmRatio !== null ? null : 'Requires white matter volume' },
+            { metric: 'CSF / ICV',              recommended: '< 15%',
+              yours: `${(csfFrac * 100).toFixed(1)}%`,
+              status: csfFrac < 0.15 ? 'good' : csfFrac < 0.25 ? 'moderate' : 'concern' },
             { metric: 'Brain Parenchyma / ICV', recommended: '> 70%',
-              yours: `${(bpf         * 100).toFixed(1)}%`,
-              status: bpf         > 0.70 ? 'good' : bpf         > 0.55 ? 'moderate' : 'concern' },
+              yours: `${(bpf * 100).toFixed(1)}%`,
+              status: bpf > 0.70 ? 'good' : bpf > 0.55 ? 'moderate' : 'concern' },
             { metric: 'Hippocampal Asymmetry',  recommended: '< 5%',
               yours: `${(hippAsymmetry * 100).toFixed(1)}%`,
               status: hippAsymmetry < 0.05 ? 'good' : hippAsymmetry < 0.10 ? 'moderate' : 'concern' },
@@ -1052,7 +1079,7 @@
             const rowDiv = document.createElement('div');
             rowDiv.className = 'reading-row';
             rowDiv.innerHTML = `
-                <span class="reading-metric">${row.metric}</span>
+                <span class="reading-metric">${row.metric}${row.note ? `<br><small style="opacity:0.6;font-size:0.75em">${row.note}</small>` : ''}</span>
                 <span class="reading-recommended">${row.recommended}</span>
                 <span class="reading-yours" style="color:var(--color-${colorFor(row.status)})">${row.yours}</span>
                 <span class="reading-status"><span class="status-dot ${row.status}" title="${row.status}"></span></span>
