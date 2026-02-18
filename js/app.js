@@ -911,4 +911,166 @@
     // On page load, restore saved state if available
     loadSavedState();
 
+    /* ======== Volumetric-based Mosconi Analysis ======== */
+    /**
+     * Render the Mosconi Framework section directly from FreeSurfer volumetric
+     * data (aseg.stats) instead of pixel-level MRI image analysis.
+     * Called by FreeSurferHandler after a successful aseg.stats parse.
+     */
+    function renderVolumetricAnalysis(regions, etiv) {
+        // Clear stale pixel-analysis session so old numbers don't bleed through
+        try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+
+        // ── Tissue volumes (mm³) ──────────────────────────────────────────
+        const gm_mm3 = (regions.cortex_L      || 0) + (regions.cortex_R      || 0)
+                     + (regions.hippocampus_L  || 0) + (regions.hippocampus_R  || 0)
+                     + (regions.amygdala_L     || 0) + (regions.amygdala_R     || 0)
+                     + (regions.thalamus_L     || 0) + (regions.thalamus_R     || 0)
+                     + (regions.caudate_L      || 0) + (regions.caudate_R      || 0)
+                     + (regions.putamen_L      || 0) + (regions.putamen_R      || 0)
+                     + (regions.cerebellum_L   || 0) + (regions.cerebellum_R   || 0);
+
+        const wm_mm3  = (regions.wm_L || 0) + (regions.wm_R || 0);
+        const csf_mm3 = (regions.lat_ventricle_L || 0) + (regions.lat_ventricle_R || 0)
+                      + (regions.ventricle_3rd   || 0) + (regions.ventricle_4th   || 0);
+
+        const brain_mm3 = gm_mm3 + wm_mm3 + csf_mm3;
+        const icv_mm3   = etiv || brain_mm3;
+
+        const gmFrac      = brain_mm3 > 0 ? gm_mm3  / brain_mm3 : 0;
+        const wmFrac      = brain_mm3 > 0 ? wm_mm3  / brain_mm3 : 0;
+        const csfFrac     = brain_mm3 > 0 ? csf_mm3 / brain_mm3 : 0;
+        const gmWmRatio   = wm_mm3   > 0 ? gm_mm3  / wm_mm3    : 0;
+        const bpf         = icv_mm3  > 0 ? (gm_mm3 + wm_mm3) / icv_mm3 : 0;
+
+        const hL = regions.hippocampus_L || 0;
+        const hR = regions.hippocampus_R || 0;
+        const hippAvg        = (hL + hR) / 2;
+        const hippAsymmetry  = hippAvg > 0 ? Math.abs(hL - hR) / hippAvg : 0;
+        const hippIcvPct     = icv_mm3 > 0 ? (hL + hR) / icv_mm3 * 100  : 0;
+
+        // ── Composite score ───────────────────────────────────────────────
+        function clamp01(v) { return Math.max(0, Math.min(100, v)); }
+        const scoreGM    = clamp01(gmFrac    >= 0.35 && gmFrac    <= 0.45 ? 100
+                             : gmFrac    < 0.35 ? (gmFrac    / 0.35) * 100
+                             :                   100 - (gmFrac    - 0.45) * 500);
+        const scoreWM    = clamp01(wmFrac    >= 0.25 && wmFrac    <= 0.40 ? 100
+                             : wmFrac    < 0.25 ? (wmFrac    / 0.25) * 100
+                             :                   100 - (wmFrac    - 0.40) * 500);
+        const scoreRatio = clamp01(gmWmRatio >= 1.0  && gmWmRatio <= 1.5  ? 100
+                             : gmWmRatio < 1.0  ? (gmWmRatio / 1.0)  * 100
+                             :                   100 - (gmWmRatio  - 1.5)  * 100);
+        const scoreBPF   = clamp01(bpf       >= 0.70 ? 100 : (bpf / 0.70) * 100);
+        const scoreAsym  = clamp01(hippAsymmetry <= 0.05 ? 100
+                             : 100 - (hippAsymmetry - 0.05) * 1000);
+
+        const composite  = Math.round(
+            scoreGM    * 0.30 +
+            scoreWM    * 0.20 +
+            scoreRatio * 0.20 +
+            scoreBPF   * 0.20 +
+            scoreAsym  * 0.10
+        );
+        const level = composite >= 75 ? 'good' : composite >= 50 ? 'moderate' : 'concern';
+
+        // ── Render ────────────────────────────────────────────────────────
+        analysisLoading.hidden = true;
+        analysisResults.innerHTML = '';
+
+        // Data-source badge
+        const badge = document.createElement('div');
+        badge.className = 'vm-status vm-status--loading';
+        badge.style.cssText = 'margin-bottom:1rem;display:block;';
+        badge.textContent = 'Analysis computed from FreeSurfer volumetric measurements (aseg.stats)';
+        analysisResults.appendChild(badge);
+
+        // Score card
+        analysisResults.appendChild(createScoreCard({ composite, level }));
+
+        // Mosconi explanation
+        analysisResults.appendChild(createMosconiExplanation(
+            'About This Score',
+            'This composite is derived from five volumetric metrics weighted by their ' +
+            'diagnostic significance in Mosconi\'s structural MRI research. Gray matter ' +
+            'volume, white matter integrity, and brain parenchyma fraction receive the ' +
+            'highest weight because Mosconi\'s longitudinal studies show these are among ' +
+            'the earliest detectable structural biomarkers — often appearing years before ' +
+            'clinical symptoms.',
+            'Mosconi et al., "Brain glucose metabolism in the early and specific diagnosis ' +
+            'of Alzheimer\'s disease," European Journal of Nuclear Medicine, 2005'
+        ));
+
+        // Reading comparison table
+        const container = document.createElement('div');
+        container.className = 'reading-comparison';
+        const tHeader = document.createElement('div');
+        tHeader.className = 'reading-comparison-header';
+        tHeader.textContent = 'Recommended Reading vs. Your Reading';
+        container.appendChild(tHeader);
+
+        const tbody = document.createElement('div');
+        tbody.className = 'reading-comparison-body';
+
+        const headerRow = document.createElement('div');
+        headerRow.className = 'reading-row header-row';
+        headerRow.innerHTML = `
+            <span>Metric</span>
+            <span style="text-align:center">Recommended</span>
+            <span style="text-align:center">Your Reading</span>
+            <span style="text-align:center">Status</span>
+        `;
+        tbody.appendChild(headerRow);
+
+        const colorFor = s => s === 'good' ? 'accent' : s === 'moderate' ? 'warning' : 'danger';
+        const rows = [
+            { metric: 'Gray Matter',           recommended: '35–45%',
+              yours: `${(gmFrac      * 100).toFixed(1)}%`,
+              status: gmFrac      > 0.35 ? 'good' : gmFrac      > 0.25 ? 'moderate' : 'concern' },
+            { metric: 'White Matter',           recommended: '25–40%',
+              yours: `${(wmFrac      * 100).toFixed(1)}%`,
+              status: wmFrac      > 0.25 ? 'good' : wmFrac      > 0.15 ? 'moderate' : 'concern' },
+            { metric: 'GM/WM Ratio',            recommended: '1.0–1.5',
+              yours: gmWmRatio.toFixed(2),
+              status: (gmWmRatio > 0.8 && gmWmRatio < 2.0) ? 'good'
+                    : (gmWmRatio > 0.5 && gmWmRatio < 2.5) ? 'moderate' : 'concern' },
+            { metric: 'CSF Proportion',         recommended: '< 15%',
+              yours: `${(csfFrac     * 100).toFixed(1)}%`,
+              status: csfFrac     < 0.15 ? 'good' : csfFrac     < 0.25 ? 'moderate' : 'concern' },
+            { metric: 'Brain Parenchyma / ICV', recommended: '> 70%',
+              yours: `${(bpf         * 100).toFixed(1)}%`,
+              status: bpf         > 0.70 ? 'good' : bpf         > 0.55 ? 'moderate' : 'concern' },
+            { metric: 'Hippocampal Asymmetry',  recommended: '< 5%',
+              yours: `${(hippAsymmetry * 100).toFixed(1)}%`,
+              status: hippAsymmetry < 0.05 ? 'good' : hippAsymmetry < 0.10 ? 'moderate' : 'concern' },
+            { metric: 'Hippocampus / ICV',      recommended: '0.45–0.65%',
+              yours: `${hippIcvPct.toFixed(3)}%`,
+              status: (hippIcvPct >= 0.45 && hippIcvPct <= 0.65) ? 'good'
+                    : (hippIcvPct >= 0.35 && hippIcvPct <= 0.75) ? 'moderate' : 'concern' },
+        ];
+
+        for (const row of rows) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'reading-row';
+            rowDiv.innerHTML = `
+                <span class="reading-metric">${row.metric}</span>
+                <span class="reading-recommended">${row.recommended}</span>
+                <span class="reading-yours" style="color:var(--color-${colorFor(row.status)})">${row.yours}</span>
+                <span class="reading-status"><span class="status-dot ${row.status}" title="${row.status}"></span></span>
+            `;
+            tbody.appendChild(rowDiv);
+        }
+        container.appendChild(tbody);
+        analysisResults.appendChild(container);
+
+        // Make the results section visible, hide the MRI viewer
+        resultsSection.hidden = false;
+        const viewerPanel = resultsSection.querySelector('.viewer-panel');
+        if (viewerPanel) viewerPanel.style.display = 'none';
+        const analysisPanel = resultsSection.querySelector('.analysis-panel');
+        if (analysisPanel) analysisPanel.style.gridColumn = '1 / -1';
+    }
+
+    // Expose so FreeSurferHandler can call it after parsing aseg.stats
+    window.AppController = { renderVolumetricAnalysis };
+
 })();

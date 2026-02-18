@@ -209,6 +209,11 @@ const FreeSurferHandler = (() => {
             } else {
                 console.error('FreeSurferHandler: VolumetricsDashboard.ingestRows not available.');
             }
+
+            // Populate the Mosconi Framework section from volumetric data
+            if (window.AppController && window.AppController.renderVolumetricAnalysis) {
+                window.AppController.renderVolumetricAnalysis(regions, etiv);
+            }
         };
 
         reader.onerror = () => showStatus('Failed to read file.', true);
