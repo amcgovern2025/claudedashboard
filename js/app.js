@@ -1215,25 +1215,26 @@
             },
         ];
 
-        // ── Render ────────────────────────────────────────────────────────
-        analysisLoading.hidden = true;
-        analysisResults.innerHTML = '';
+        // ── Render into vm-dashboard ──────────────────────────────────────
+        // Write directly into the volumetrics dashboard section so everything
+        // is visible together without requiring a separate scroll/section.
+        const dest = document.getElementById('vm-mosconi-analysis') || analysisResults;
+        dest.innerHTML = '';
+        dest.hidden = false;
 
-        // Data-source badge
-        const badge = document.createElement('div');
-        badge.className = 'vm-status vm-status--loading';
-        badge.style.cssText = 'margin-bottom:1rem;display:block;';
-        badge.textContent = 'Analysis computed from FreeSurfer volumetric measurements (aseg.stats)';
-        analysisResults.appendChild(badge);
+        const sectionHeading = document.createElement('h3');
+        sectionHeading.className = 'vm-section-label';
+        sectionHeading.textContent = 'Mosconi Framework Analysis';
+        dest.appendChild(sectionHeading);
 
         // Score card (with explicit /100 label)
         const scoreCard = createScoreCard({ composite, level });
         const scoreLabel = scoreCard.querySelector('.score-label');
         if (scoreLabel) scoreLabel.textContent = 'Brain Health Composite Score (out of 100)';
-        analysisResults.appendChild(scoreCard);
+        dest.appendChild(scoreCard);
 
         // Score breakdown panel
-        analysisResults.appendChild(createScoreBreakdown(subScoresData));
+        dest.appendChild(createScoreBreakdown(subScoresData));
 
         // Plain-English Mosconi summary
         const mosconiText = buildMosconiSummary({
@@ -1243,10 +1244,10 @@
             gmWmRatio, wmFrac, hasWM,
             hL, hR,
         });
-        analysisResults.appendChild(createMosconiSummaryPanel(mosconiText));
+        dest.appendChild(createMosconiSummaryPanel(mosconiText));
 
         // Mosconi methodology note
-        analysisResults.appendChild(createMosconiExplanation(
+        dest.appendChild(createMosconiExplanation(
             'About This Score',
             'This composite is derived from five volumetric metrics weighted by their ' +
             'diagnostic significance in Mosconi\'s structural MRI research. Gray matter ' +
@@ -1321,14 +1322,7 @@
             tbody.appendChild(rowDiv);
         }
         container.appendChild(tbody);
-        analysisResults.appendChild(container);
-
-        // Make the results section visible, hide the MRI viewer
-        resultsSection.hidden = false;
-        const viewerPanel = resultsSection.querySelector('.viewer-panel');
-        if (viewerPanel) viewerPanel.style.display = 'none';
-        const analysisPanel = resultsSection.querySelector('.analysis-panel');
-        if (analysisPanel) analysisPanel.style.gridColumn = '1 / -1';
+        dest.appendChild(container);
     }
 
     // Expose so FreeSurferHandler can call it after parsing aseg.stats
