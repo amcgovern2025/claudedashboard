@@ -117,6 +117,52 @@ const VolumetricsDashboard = (() => {
     }
 
     // ── Data loading ──────────────────────────────────────────────────────
+
+    /**
+     * Reconstruct a regions map from dashboard rows and fire renderVolumetricAnalysis.
+     * Used so that demo data and CSV uploads also show the Mosconi composite analysis.
+     * When only bilateral rows are present (e.g. demo CSV), L/R are split 50/50 so
+     * asymmetry shows as 0% — the score still reflects GM, WM, BPF, and CSF values.
+     */
+    function triggerMosconiAnalysis(rows) {
+        if (!window.AppController || !window.AppController.renderVolumetricAnalysis) return;
+
+        const byRoi = {};
+        let etiv = null;
+        for (const r of rows) {
+            byRoi[r.roi] = r.volume_mm3;
+            if (!etiv && r.icv_mm3) etiv = r.icv_mm3;
+        }
+
+        const regions = {};
+        // Bilateral pairs: [leftKey, rightKey, bilateralKey]
+        const pairs = [
+            ['hippocampus_L',   'hippocampus_R',   'hippocampus'],
+            ['amygdala_L',      'amygdala_R',      'amygdala'],
+            ['cortex_L',        'cortex_R',        'cortex'],
+            ['wm_L',            'wm_R',            'white_matter'],
+            ['thalamus_L',      'thalamus_R',      'thalamus'],
+            ['caudate_L',       'caudate_R',       'caudate'],
+            ['putamen_L',       'putamen_R',       'putamen'],
+            ['lat_ventricle_L', 'lat_ventricle_R', 'lateral_ventricles'],
+            ['cerebellum_L',    'cerebellum_R',    'cerebellum'],
+        ];
+        for (const [lKey, rKey, bilKey] of pairs) {
+            if (byRoi[lKey] !== undefined) regions[lKey] = byRoi[lKey];
+            if (byRoi[rKey] !== undefined) regions[rKey] = byRoi[rKey];
+            // Fall back to 50/50 bilateral split when individual sides are absent
+            if (!regions[lKey] && !regions[rKey] && byRoi[bilKey] !== undefined) {
+                regions[lKey] = byRoi[bilKey] / 2;
+                regions[rKey] = byRoi[bilKey] / 2;
+            }
+        }
+        if (byRoi.ventricle_3rd !== undefined) regions.ventricle_3rd = byRoi.ventricle_3rd;
+        if (byRoi.ventricle_4th !== undefined) regions.ventricle_4th = byRoi.ventricle_4th;
+        if (byRoi.brainstem    !== undefined) regions.brainstem      = byRoi.brainstem;
+
+        window.AppController.renderVolumetricAnalysis(regions, etiv, {});
+    }
+
     function ingestCSV(text, sourceLabel) {
         const parsed = parseCSV(text);
         if (!parsed.length) {
@@ -137,6 +183,7 @@ const VolumetricsDashboard = (() => {
         els.sourceBadge.className = 'vm-source-badge vm-source-' + (isDemo ? 'demo' : 'live');
 
         renderDashboard(currentSubject);
+        triggerMosconiAnalysis(allRows.filter(r => r.subject === currentSubject));
     }
 
     function ingestPlot(url) {
@@ -361,6 +408,7 @@ const VolumetricsDashboard = (() => {
         els.sourceBadge.className   = 'vm-source-badge vm-source-live';
 
         renderDashboard(currentSubject);
+        triggerMosconiAnalysis(rows.filter(r => r.subject === currentSubject));
     }
 
     // ── Initialisation ────────────────────────────────────────────────────
