@@ -440,6 +440,52 @@ main {
     margin-top: 0.5rem;
 }
 
+/* Mosconi plain-English summary panel */
+.mosconi-summary-panel {
+    border: 1px solid #d4e6f1;
+    border-radius: var(--radius);
+    background: #f0f8ff;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    font-size: 0.83rem;
+}
+
+.mosconi-summary-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    background: #d6eaf8;
+    border-bottom: 1px solid #d4e6f1;
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #1a5276;
+    letter-spacing: 0.01em;
+}
+
+.mosconi-summary-body {
+    padding: 0.85rem 1rem 0.65rem;
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+.mosconi-summary-body p {
+    margin: 0 0 0.65rem;
+}
+
+.mosconi-summary-body p:last-child {
+    margin-bottom: 0;
+}
+
+.mosconi-summary-disclaimer {
+    padding: 0.55rem 1rem;
+    border-top: 1px solid #d4e6f1;
+    font-size: 0.72rem;
+    color: #5d6d7e;
+    font-style: italic;
+    line-height: 1.4;
+}
+
 /* Score breakdown panel */
 .score-breakdown {
     border: 1px solid #e8e8e8;

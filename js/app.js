@@ -713,6 +713,122 @@
 
     /* ======== UI Component Builders ======== */
 
+    function buildMosconiSummary({ composite, level, gmFrac, bpf, csfFrac,
+                                   hippAsymmetry, hippIcvPct, gmWmRatio,
+                                   wmFrac, hasWM, hL, hR }) {
+        const positives = [];
+        const concerns  = [];
+
+        // Gray matter
+        if (gmFrac >= 0.35 && gmFrac <= 0.45) {
+            positives.push(`gray matter volume is in a healthy range at ${(gmFrac * 100).toFixed(1)}% of intracranial volume`);
+        } else if (gmFrac < 0.35) {
+            concerns.push(`gray matter volume is low at ${(gmFrac * 100).toFixed(1)}% of intracranial volume (ideal: 35–45%) — in her longitudinal work, reduced gray matter is one of the earliest detectable structural changes, often appearing years before any symptoms`);
+        } else {
+            concerns.push(`gray matter fraction reads high at ${(gmFrac * 100).toFixed(1)}%, which can reflect measurement variability and is worth discussing with a neurologist`);
+        }
+
+        // Brain parenchyma fraction
+        if (bpf >= 0.70) {
+            positives.push(`overall brain tissue volume is solid at ${(bpf * 100).toFixed(1)}% of the skull — above the 70% threshold she associates with healthy aging`);
+        } else if (bpf >= 0.60) {
+            concerns.push(`total brain tissue fills ${(bpf * 100).toFixed(1)}% of the skull — slightly below the 70% threshold her research associates with healthy aging, which may warrant monitoring`);
+        } else {
+            concerns.push(`total brain tissue is at ${(bpf * 100).toFixed(1)}% of the skull — meaningfully below the 70% ideal and consistent with patterns she associates with accelerated atrophy`);
+        }
+
+        // White matter & ratio (if available)
+        if (hasWM && gmWmRatio !== null) {
+            if (gmWmRatio >= 1.0 && gmWmRatio <= 1.5) {
+                positives.push(`the gray-to-white matter ratio of ${gmWmRatio.toFixed(2)} is within her preferred range of 1.0–1.5`);
+            } else if (gmWmRatio > 1.5) {
+                concerns.push(`the gray-to-white matter ratio is ${gmWmRatio.toFixed(2)} — above the 1.5 ceiling — which she identifies as a pattern often accompanying white matter microstructural changes that can precede cognitive symptoms`);
+            } else {
+                concerns.push(`the gray-to-white matter ratio of ${gmWmRatio.toFixed(2)} is below 1.0, suggesting relatively more white matter than expected; worth reviewing in clinical context`);
+            }
+        }
+
+        // CSF
+        if (csfFrac < 0.15) {
+            positives.push(`cerebrospinal fluid volume is normal at ${(csfFrac * 100).toFixed(1)}%`);
+        } else if (csfFrac < 0.25) {
+            concerns.push(`CSF is mildly elevated at ${(csfFrac * 100).toFixed(1)}% (ideal: below 15%) — she notes that rising CSF often tracks alongside gradual brain tissue loss and is worth monitoring over time`);
+        } else {
+            concerns.push(`CSF volume is substantially elevated at ${(csfFrac * 100).toFixed(1)}% — she consistently flags high CSF as a sign of significant brain tissue reduction and recommends clinical follow-up`);
+        }
+
+        // Hippocampal asymmetry
+        if (hippAsymmetry <= 0.05) {
+            positives.push(`hippocampal symmetry is excellent — left (${hL.toFixed(0)} mm³) and right (${hR.toFixed(0)} mm³) are well-matched`);
+        } else if (hippAsymmetry <= 0.10) {
+            concerns.push(`mild hippocampal asymmetry of ${(hippAsymmetry * 100).toFixed(1)}% (L: ${hL.toFixed(0)} mm³, R: ${hR.toFixed(0)} mm³) — her work specifically calls out hippocampal volume as a sensitive early biomarker; this level is worth monitoring, especially with serial scans`);
+        } else {
+            concerns.push(`notable hippocampal asymmetry of ${(hippAsymmetry * 100).toFixed(1)}% (L: ${hL.toFixed(0)} mm³, R: ${hR.toFixed(0)} mm³) — she identifies asymmetric hippocampal loss as one of the more specific early structural markers of neurodegeneration`);
+        }
+
+        // Hippocampus/ICV
+        if (hippIcvPct >= 0.45 && hippIcvPct <= 0.65) {
+            positives.push(`hippocampal volume relative to brain size is within normal range at ${hippIcvPct.toFixed(3)}%`);
+        } else if (hippIcvPct < 0.45) {
+            concerns.push(`hippocampal volume is on the smaller side relative to brain size at ${hippIcvPct.toFixed(3)}% (ideal: 0.45–0.65%) — hippocampal atrophy is a core biomarker in her Alzheimer's risk research`);
+        }
+
+        // Compose the narrative
+        let opening;
+        if (level === 'good') {
+            opening = 'Overall, the structural picture here is reassuring.';
+        } else if (level === 'moderate') {
+            opening = 'Overall, this brain shows a mixed picture — some healthy patterns alongside a few early indicators that deserve attention.';
+        } else {
+            opening = 'Overall, these measurements show several structural findings that Dr. Mosconi would consider clinically meaningful and worth a conversation with a neurologist.';
+        }
+
+        let body = opening + '\n\n';
+
+        if (positives.length) {
+            body += 'What looks good: ' + positives.join('; ') + '.\n\n';
+        }
+        if (concerns.length) {
+            body += 'What to pay attention to: ' + concerns.join('; ') + '.\n\n';
+        }
+
+        if (level === 'good') {
+            body += 'Her research consistently shows that even healthy brains benefit from protective habits — Mediterranean-style eating, regular aerobic exercise, quality sleep, and managing cardiovascular risk factors like blood pressure and blood sugar. These are the levers she returns to again and again.';
+        } else if (level === 'moderate') {
+            body += 'Her research shows that these kinds of early patterns are addressable. She emphasizes a Mediterranean diet, consistent aerobic exercise (particularly activities that raise heart rate), good sleep hygiene, and metabolic health — insulin resistance and blood pressure are two factors she specifically links to accelerated brain aging. This is the window where intervention matters most.';
+        } else {
+            body += 'She is clear that structural findings at this level should not be read in isolation — a full clinical evaluation, including metabolic labs and a conversation with a neurologist familiar with structural MRI, is the appropriate next step. That said, her research also shows that the brain retains more plasticity than once believed, and that lifestyle changes — diet, exercise, sleep, and metabolic management — meaningfully influence trajectory even when imaging findings are present.';
+        }
+
+        return body;
+    }
+
+    function createMosconiSummaryPanel(summaryText) {
+        const panel = document.createElement('div');
+        panel.className = 'mosconi-summary-panel';
+
+        panel.innerHTML = `
+            <div class="mosconi-summary-header">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                What Dr. Mosconi's research suggests about these findings
+            </div>
+            <div class="mosconi-summary-body"></div>
+            <div class="mosconi-summary-disclaimer">
+                This summary applies published norms and interpretive frameworks from Dr. Lisa Mosconi's structural MRI research. It is not a clinical diagnosis — always review imaging findings with a qualified neurologist.
+            </div>
+        `;
+
+        // Render newlines as paragraphs
+        const bodyEl = panel.querySelector('.mosconi-summary-body');
+        summaryText.trim().split('\n\n').forEach(para => {
+            const p = document.createElement('p');
+            p.textContent = para;
+            bodyEl.appendChild(p);
+        });
+
+        return panel;
+    }
+
     function createScoreCard(score) {
         const card = document.createElement('div');
         card.className = `score-card ${score.level}`;
@@ -1119,7 +1235,17 @@
         // Score breakdown panel
         analysisResults.appendChild(createScoreBreakdown(subScoresData));
 
-        // Mosconi explanation
+        // Plain-English Mosconi summary
+        const mosconiText = buildMosconiSummary({
+            composite, level,
+            gmFrac, bpf, csfFrac,
+            hippAsymmetry, hippIcvPct,
+            gmWmRatio, wmFrac, hasWM,
+            hL, hR,
+        });
+        analysisResults.appendChild(createMosconiSummaryPanel(mosconiText));
+
+        // Mosconi methodology note
         analysisResults.appendChild(createMosconiExplanation(
             'About This Score',
             'This composite is derived from five volumetric metrics weighted by their ' +
