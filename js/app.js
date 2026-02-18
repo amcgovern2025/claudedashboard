@@ -730,6 +730,52 @@
         return card;
     }
 
+    function createScoreBreakdown(subScores) {
+        const section = document.createElement('div');
+        section.className = 'score-breakdown';
+
+        const header = document.createElement('div');
+        header.className = 'score-breakdown-header';
+        header.textContent = 'Score Breakdown — Why this score?';
+        section.appendChild(header);
+
+        for (const item of subScores) {
+            const row = document.createElement('div');
+            row.className = 'score-breakdown-row';
+
+            if (item.score === null) {
+                row.innerHTML = `
+                    <div class="sbd-top">
+                        <span class="sbd-name">${item.name}</span>
+                        <span class="sbd-weight">${(item.weight * 100).toFixed(0)}% weight — not included</span>
+                    </div>
+                    <div class="sbd-explanation">${item.explanation}</div>
+                    <div class="sbd-na">N/A — redistributed to other metrics</div>
+                `;
+            } else {
+                const level = item.score >= 75 ? 'good' : item.score >= 50 ? 'moderate' : 'concern';
+                const contribution = (item.score * item.weight).toFixed(1);
+                row.innerHTML = `
+                    <div class="sbd-top">
+                        <span class="sbd-name">${item.name}</span>
+                        <span class="sbd-contribution ${level}">${contribution} pts</span>
+                    </div>
+                    <div class="sbd-raw">Your value: <strong>${item.rawValue}</strong></div>
+                    <div class="sbd-explanation">${item.explanation}</div>
+                    <div class="sbd-bar-row">
+                        <div class="metric-bar-bg">
+                            <div class="metric-bar ${level}" style="width:${item.score}%"></div>
+                        </div>
+                        <span class="sbd-score-label">${item.score.toFixed(0)}/100 &times; ${(item.weight * 100).toFixed(0)}%</span>
+                    </div>
+                `;
+            }
+            section.appendChild(row);
+        }
+
+        return section;
+    }
+
     function createSection(title, expanded) {
         const section = document.createElement('div');
         section.className = 'analysis-section';
@@ -994,6 +1040,65 @@
         }
         const level = composite >= 75 ? 'good' : composite >= 50 ? 'moderate' : 'concern';
 
+        // Build sub-score explanations for breakdown panel
+        const subScoresData = [
+            {
+                name: 'Gray Matter Fraction',
+                rawValue: `${(gmFrac * 100).toFixed(1)}% of ICV`,
+                score: scoreGM,
+                weight: hasWM ? 0.30 : 0.40,
+                explanation: gmFrac >= 0.35 && gmFrac <= 0.45
+                    ? 'Within ideal range (35–45%). Full score.'
+                    : gmFrac < 0.35
+                    ? `At ${(gmFrac * 100).toFixed(1)}%, below the 35% floor. Score scales proportionally to how close you are to 35%.`
+                    : `At ${(gmFrac * 100).toFixed(1)}%, above the 45% ceiling. Each percentage point over 45% subtracts ~5 pts.`
+            },
+            {
+                name: 'White Matter Fraction',
+                rawValue: hasWM ? `${(wmFrac * 100).toFixed(1)}% of ICV` : 'Not available',
+                score: scoreWM,
+                weight: 0.20,
+                explanation: !hasWM
+                    ? 'Not reported by this scan type (e.g. SynthSeg). Weight redistributed to GM and BPF.'
+                    : wmFrac >= 0.25 && wmFrac <= 0.40
+                    ? 'Within ideal range (25–40%). Full score.'
+                    : wmFrac < 0.25
+                    ? `At ${(wmFrac * 100).toFixed(1)}%, below the 25% floor. Score scales proportionally.`
+                    : `At ${(wmFrac * 100).toFixed(1)}%, above the 40% ceiling. Each % over 40% subtracts ~5 pts.`
+            },
+            {
+                name: 'GM / WM Ratio',
+                rawValue: gmWmRatio !== null ? gmWmRatio.toFixed(2) : 'Not available',
+                score: scoreRatio,
+                weight: 0.20,
+                explanation: !hasWM || gmWmRatio === null
+                    ? 'Requires white matter volume. Weight redistributed.'
+                    : gmWmRatio >= 1.0 && gmWmRatio <= 1.5
+                    ? 'Within ideal range (1.0–1.5). Full score.'
+                    : gmWmRatio < 1.0
+                    ? `Ratio of ${gmWmRatio.toFixed(2)} is below 1.0 — more white matter than gray matter relative to normal. Score scales proportionally.`
+                    : `Ratio of ${gmWmRatio.toFixed(2)} exceeds 1.5. Each unit above 1.5 subtracts 100 pts — this is likely your biggest drag on the composite.`
+            },
+            {
+                name: 'Brain Parenchyma Fraction',
+                rawValue: `${(bpf * 100).toFixed(1)}% of ICV`,
+                score: scoreBPF,
+                weight: hasWM ? 0.20 : 0.40,
+                explanation: bpf >= 0.70
+                    ? 'At or above the 70% threshold. Full score.'
+                    : `At ${(bpf * 100).toFixed(1)}%, below the 70% ideal. Score = ${scoreBPF.toFixed(0)}/100. This reflects overall brain volume relative to skull size — lower values can indicate atrophy.`
+            },
+            {
+                name: 'Hippocampal Asymmetry',
+                rawValue: `${(hippAsymmetry * 100).toFixed(1)}% difference (L: ${hL.toFixed(0)} mm³, R: ${hR.toFixed(0)} mm³)`,
+                score: scoreAsym,
+                weight: 0.10,
+                explanation: hippAsymmetry <= 0.05
+                    ? 'Asymmetry within normal range (≤5%). Full score.'
+                    : `Asymmetry of ${(hippAsymmetry * 100).toFixed(1)}% exceeds the 5% threshold. Each 0.1% above 5% subtracts 1 pt. The hippocampus is a key early biomarker for neurodegeneration.`
+            },
+        ];
+
         // ── Render ────────────────────────────────────────────────────────
         analysisLoading.hidden = true;
         analysisResults.innerHTML = '';
@@ -1010,6 +1115,9 @@
         const scoreLabel = scoreCard.querySelector('.score-label');
         if (scoreLabel) scoreLabel.textContent = 'Brain Health Composite Score (out of 100)';
         analysisResults.appendChild(scoreCard);
+
+        // Score breakdown panel
+        analysisResults.appendChild(createScoreBreakdown(subScoresData));
 
         // Mosconi explanation
         analysisResults.appendChild(createMosconiExplanation(
