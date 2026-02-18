@@ -119,6 +119,31 @@
 
             <!-- Load controls (file upload fallback + always-visible refresh) -->
             <div id="vm-load-controls" class="vm-load-controls" hidden>
+
+                <!-- FreeSurfer direct upload -->
+                <div class="vm-load-section-label">
+                    <span>Upload FreeSurfer output directly</span>
+                    <span class="vm-load-section-note">No Python required — parsed in the browser</span>
+                </div>
+                <div class="vm-load-row">
+                    <div class="vm-load-item">
+                        <span class="vm-load-label">aseg.stats
+                            <em style="font-weight:400">(from &lt;subject&gt;/stats/)</em>
+                        </span>
+                        <label class="file-btn file-btn--primary">
+                            Upload aseg.stats
+                            <input type="file" id="fs-stats-input" accept=".stats" hidden>
+                        </label>
+                    </div>
+                </div>
+                <div id="fs-status" class="vm-status" hidden></div>
+
+                <!-- Divider -->
+                <div class="vm-load-divider">
+                    <span>or upload pre-processed files</span>
+                </div>
+
+                <!-- Pre-processed CSV / plot upload -->
                 <div class="vm-load-row">
                     <div class="vm-load-item">
                         <span class="vm-load-label">brain_metrics_summary.csv</span>
@@ -234,5 +259,6 @@
     <script src="js/analysis-engine.js"></script>
     <script src="js/app.js"></script>
     <script src="js/volumetrics-dashboard.js"></script>
+    <script src="js/freesurfer-handler.js"></script>
 </body>
 </html>

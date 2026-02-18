@@ -337,6 +337,32 @@ const VolumetricsDashboard = (() => {
         els.status.textContent = msg;
     }
 
+    // ── External data ingestion ───────────────────────────────────────────
+    /**
+     * Accept pre-parsed rows (array of plain objects) from an external source
+     * such as FreeSurferHandler.  Rows must have the same fields as the CSV:
+     *   subject, roi, label, system, volume_mm3, volume_cm3, volume_pct_icv, icv_mm3
+     */
+    function ingestRows(rows, sourceLabel) {
+        if (!rows || !rows.length) {
+            setStatus('error', 'No data rows found — check the file.');
+            return;
+        }
+        allRows        = rows;
+        subjects       = [...new Set(rows.map(r => r.subject))];
+        currentSubject = subjects[0];
+        isDemo         = false;
+
+        setStatus(null);
+        buildSubjectBar();
+        els.demoBanner.hidden      = true;
+        els.sourceBadge.textContent = sourceLabel || 'FreeSurfer';
+        els.sourceBadge.hidden      = false;
+        els.sourceBadge.className   = 'vm-source-badge vm-source-live';
+
+        renderDashboard(currentSubject);
+    }
+
     // ── Initialisation ────────────────────────────────────────────────────
     function init() {
         els = {
@@ -401,7 +427,7 @@ const VolumetricsDashboard = (() => {
         })();
     }
 
-    return { init };
+    return { init, ingestRows };
 })();
 
 // Auto-init once DOM is ready

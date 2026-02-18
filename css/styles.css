@@ -848,6 +848,42 @@ footer {
     font-size: 0.76rem;
 }
 
+.vm-load-section-label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+.vm-load-section-note {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-text-light);
+}
+.vm-load-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.9rem 0 0.7rem;
+    font-size: 0.75rem;
+    color: var(--color-text-light);
+}
+.vm-load-divider::before,
+.vm-load-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+.file-btn--primary {
+    background: var(--color-accent, #2980b9);
+}
+.file-btn--primary:hover {
+    background: var(--color-accent-light, #3498db);
+}
+
 .vm-subject-bar {
     display: flex;
     align-items: center;
