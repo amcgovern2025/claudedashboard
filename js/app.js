@@ -26,36 +26,36 @@
     const volumeMetadataSection = document.getElementById('volume-metadata-section');
     const volumeMetadataContent = document.getElementById('volume-metadata-content');
 
-    /* ======== File Upload Handling ======== */
+    /* ======== File Upload Handling (DICOM/NIfTI — only wired when UI is present) ======== */
 
-    // Drag & drop
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('drag-over');
-    });
+    if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
 
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('drag-over');
-    });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
 
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        handleFiles(e.dataTransfer.files);
-    });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
 
-    // Click to browse
-    dropZone.addEventListener('click', (e) => {
-        if (e.target.tagName !== 'INPUT') {
-            fileInput.click();
-        }
-    });
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT') {
+                fileInput.click();
+            }
+        });
 
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            handleFiles(fileInput.files);
-        }
-    });
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleFiles(fileInput.files);
+            }
+        });
+    }
 
     /* ======== File Type Detection ======== */
 
@@ -1070,8 +1070,8 @@
         }
     }
 
-    // On page load, restore saved state if available
-    loadSavedState();
+    // On page load, restore saved state if available (DICOM UI only)
+    if (dropZone) loadSavedState();
 
     /* ======== Volumetric-based Mosconi Analysis ======== */
     /**
