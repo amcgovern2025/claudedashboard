@@ -1049,3 +1049,125 @@ footer {
     .vm-plot-img      { max-width: 100%; page-break-inside: avoid; }
     .vm-cards         { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* ══════════════════════════════════════════════════
+   Passcode Gate Overlay
+   ══════════════════════════════════════════════════ */
+
+#passcode-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, #0a1f2e 0%, #1a5276 55%, #0e2f44 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.4s ease;
+}
+
+/* Hide overlay without flash when already authenticated */
+.smb-authed #passcode-overlay {
+    display: none;
+}
+
+#passcode-overlay.unlocking {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.passcode-modal {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    padding: 3rem 2.5rem 2.5rem;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
+}
+
+.passcode-lock-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 1.25rem;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.passcode-modal h2 {
+    color: #ffffff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.passcode-subtitle {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.875rem;
+    margin-bottom: 1.75rem;
+}
+
+.passcode-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+#passcode-input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    outline: none;
+    text-align: center;
+    letter-spacing: 0.2em;
+    transition: border-color 0.2s;
+}
+
+#passcode-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: normal;
+}
+
+#passcode-input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.11);
+}
+
+#passcode-input.shake {
+    animation: passcode-shake 0.45s ease;
+}
+
+@keyframes passcode-shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-9px); }
+    40%       { transform: translateX(9px); }
+    60%       { transform: translateX(-6px); }
+    80%       { transform: translateX(6px); }
+}
+
+#passcode-submit {
+    width: 100%;
+    padding: 0.85rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background: var(--color-accent);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.2s, transform 0.1s;
+}
+
+#passcode-submit:hover  { background: var(--color-accent-light); }
+#passcode-submit:active { transform: scale(0.98); }
+
+#passcode-error {
+    color: #ff7675;
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+}
