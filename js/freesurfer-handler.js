@@ -108,11 +108,20 @@ const FreeSurferHandler = (() => {
             const line = rawLine.trimEnd();
 
             if (line.startsWith('#')) {
-                // e.g. # Measure EstimatedTotalIntraCranialVol, eTIV, ..., 1456789.0, mm^3
-                const m = line.match(
-                    /Measure\s+EstimatedTotalIntraCranialVol[^,]*,[^,]*,\s*[^,]*,\s*([\d.]+)\s*,\s*mm/i
-                );
-                if (m) etiv = parseFloat(m[1]);
+                // e.g. # Measure lhCortex, lhCortexVol, ..., 253234.7, mm^3
+                const m = line.match(/Measure\s+(\w+)[^,]*,[^,]*,[^,]*,\s*([\d.]+)\s*,\s*mm/i);
+                if (m) {
+                    const MEASURE_MAP = {
+                        EstimatedTotalIntraCranialVol: '_etiv',
+                        lhCortex:                'cortex_L',
+                        rhCortex:                'cortex_R',
+                        lhCerebralWhiteMatter:   'wm_L',
+                        rhCerebralWhiteMatter:   'wm_R',
+                    };
+                    const key = MEASURE_MAP[m[1]];
+                    if (key === '_etiv') etiv = parseFloat(m[2]);
+                    else if (key) regions[key] = parseFloat(m[2]);
+                }
                 continue;
             }
 

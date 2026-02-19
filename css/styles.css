@@ -1075,7 +1075,7 @@ footer {
 }
 
 /* Prevent scrolling while overlay is active */
-body:has(#passcode-overlay:not(.unlocking)) {
+html:not(.smb-authed) body:has(#passcode-overlay:not(.unlocking)) {
     overflow: hidden;
 }
 
