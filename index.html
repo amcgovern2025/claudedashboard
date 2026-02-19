@@ -7,8 +7,39 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://unpkg.com/dicom-parser@1.8.21/dist/dicomParser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nifti-reader-js"></script>
+    <!-- Passcode: hide overlay immediately if already authenticated this session -->
+    <script>
+        (function () {
+            var h = 'fee89e23974ad71d79987ae01f05eb7e2ed16de1383b35dc33b799b1b2d050c0';
+            if (sessionStorage.getItem('smb_auth') === h) {
+                document.documentElement.classList.add('smb-authed');
+            }
+        })();
+    </script>
 </head>
 <body>
+    <!-- ── Passcode Gate ── -->
+    <div id="passcode-overlay" role="dialog" aria-modal="true" aria-label="Access passcode required">
+        <div class="passcode-modal">
+            <svg class="passcode-lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <h2>Brain MRI Analysis Tool</h2>
+            <p class="passcode-subtitle">Enter passcode to access</p>
+            <form id="passcode-form" class="passcode-form" novalidate>
+                <input
+                    type="password"
+                    id="passcode-input"
+                    placeholder="Passcode"
+                    autocomplete="current-password"
+                    spellcheck="false"
+                    required>
+                <button type="submit" id="passcode-submit">Unlock</button>
+            </form>
+            <p id="passcode-error" hidden>Incorrect passcode — please try again.</p>
+        </div>
+    </div>
     <header>
         <div class="header-content">
             <h1>Brain MRI Analysis Tool</h1>
@@ -260,5 +291,6 @@
     <script src="js/app.js"></script>
     <script src="js/volumetrics-dashboard.js"></script>
     <script src="js/freesurfer-handler.js"></script>
+    <script src="js/passcode.js"></script>
 </body>
 </html>
