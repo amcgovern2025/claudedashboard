@@ -833,6 +833,7 @@
     const STORAGE_KEY = 'mri_analysis_state';
 
     function saveAnalysisState(results) {
+        if (results._isDemo) return; // don't persist demo data
         try {
             const stateToSave = {
                 timestamp: Date.now(),
@@ -862,19 +863,170 @@
         return Array.from(chips).map(chip => chip.textContent.trim());
     }
 
+    function getDemoState() {
+        // Build a realistic bimodal histogram (gray/white matter peaks)
+        const bins = 64;
+        const counts = Array.from({ length: bins }, (_, i) => {
+            const gm = Math.round(3200 * Math.exp(-0.5 * Math.pow((i - 22) / 5, 2)));
+            const wm = Math.round(2400 * Math.exp(-0.5 * Math.pow((i - 40) / 5, 2)));
+            const noise = Math.round(Math.random() * 80);
+            return (i < 6 ? Math.round(8000 * Math.exp(-i * 0.9)) : gm + wm) + noise;
+        });
+
+        return {
+            brainHealthScore: {
+                composite: 78,
+                level: 'good',
+                subScores: {
+                    tissueBalance: 80,
+                    symmetry: 88,
+                    atrophy: 75,
+                    texture: 72,
+                    regionalBalance: 76
+                }
+            },
+            tissueComposition: {
+                grayMatter: 0.41,
+                whiteMatter: 0.33,
+                csf: 0.11,
+                gmToWmRatio: 1.24,
+                background: 0.15
+            },
+            symmetry: {
+                symmetryScore: 88.4,
+                overallRatio: 1.014,
+                temporalAsymmetry: 0.032
+            },
+            atrophy: {
+                brainParenchymaFraction: 0.74,
+                atrophyIndex: 0.26,
+                ventricularRatio: 0.08
+            },
+            texture: {
+                homogeneityScore: 72.3,
+                contrast: 18.4,
+                energy: 0.041
+            },
+            globalStats: {
+                mean: 312.4,
+                stdDev: 98.7,
+                median: 298.0,
+                min: 0,
+                max: 1023
+            },
+            histogram: { counts, bins },
+            findings: [
+                {
+                    category: 'Tissue Composition (Mosconi Structural Biomarkers)',
+                    items: [
+                        {
+                            title: 'Gray Matter Proportion',
+                            detail: '41.0% of brain tissue. Mosconi\'s research identifies gray matter volume as a key MRI biomarker for dementia risk assessment. Changes in gray matter are among the earliest structural indicators.',
+                            indicator: 'normal'
+                        },
+                        {
+                            title: 'White Matter Proportion',
+                            detail: '33.0% of brain tissue. White matter integrity is tracked in Mosconi\'s research as an indicator of neural connectivity.',
+                            indicator: 'normal'
+                        },
+                        {
+                            title: 'Gray-to-White Matter Ratio',
+                            detail: 'Ratio: 1.24. The balance between gray and white matter is an important structural metric in brain aging research.',
+                            indicator: 'normal'
+                        }
+                    ]
+                },
+                {
+                    category: 'Regional Analysis (Mosconi Key Brain Regions)',
+                    items: [
+                        {
+                            title: 'Medial Temporal / Hippocampal Region',
+                            detail: 'Relative intensity: 94.2% of mean. The hippocampus is among the first regions to show metabolic decline and structural changes in Alzheimer\'s disease.',
+                            indicator: 'normal'
+                        },
+                        {
+                            title: 'Posterior Cingulate Cortex',
+                            detail: 'Relative intensity: 91.8% of mean. Mosconi\'s FDG-PET work identified the posterior cingulate as a region showing early glucose metabolism decline in at-risk individuals.',
+                            indicator: 'normal'
+                        },
+                        {
+                            title: 'Frontal Lobe',
+                            detail: 'Relative intensity: 96.1% of mean. Frontal lobe changes are tracked in Mosconi\'s research on brain aging and menopause-related metabolic shifts.',
+                            indicator: 'normal'
+                        }
+                    ]
+                },
+                {
+                    category: 'Hemispheric Symmetry',
+                    items: [
+                        {
+                            title: 'Overall Symmetry',
+                            detail: 'Symmetry score: 88.4/100. L/R intensity ratio: 1.014. Within the normal range for healthy bilateral brain structure.',
+                            indicator: 'normal'
+                        },
+                        {
+                            title: 'Temporal Asymmetry',
+                            detail: 'Temporal asymmetry: 3.2%. Below the 5% threshold Mosconi identifies as warranting clinical attention.',
+                            indicator: 'normal'
+                        }
+                    ]
+                },
+                {
+                    category: 'Brain Atrophy Indicators',
+                    items: [
+                        {
+                            title: 'Brain Parenchyma Fraction',
+                            detail: 'Brain parenchyma fraction: 74.0%. Above the 70% threshold associated with healthy brain volume preservation.',
+                            indicator: 'normal'
+                        },
+                        {
+                            title: 'Ventricular Volume Estimate',
+                            detail: 'Ventricular ratio: 8.0%. Consistent with age-appropriate CSF space without signs of compensatory enlargement.',
+                            indicator: 'normal'
+                        }
+                    ]
+                }
+            ],
+            recommendations: [
+                {
+                    title: 'Mediterranean Diet',
+                    detail: 'Mosconi\'s research shows Mediterranean diet adherence is associated with 1.5–2.0% greater brain volume preservation over 5 years. Prioritize olive oil, fatty fish, legumes, and leafy greens.'
+                },
+                {
+                    title: 'Aerobic Exercise',
+                    detail: 'Mosconi\'s studies link regular aerobic activity (150 min/week) to increased hippocampal volume and improved cerebral blood flow — two key structural biomarkers.'
+                },
+                {
+                    title: 'Quality Sleep',
+                    detail: 'Adequate sleep (7–9 hours) supports glymphatic clearance of amyloid-beta. Mosconi\'s cohort studies show sleep disruption correlates with accelerated brain aging markers.'
+                },
+                {
+                    title: 'Cognitive Engagement',
+                    detail: 'Sustained intellectual activity builds cognitive reserve, which Mosconi identifies as protective against the clinical expression of neurodegeneration even in the presence of pathology.'
+                }
+            ],
+            volumetric: { totalSlices: 1, brainExtent: 0, crossSliceConsistency: 0, totalBrainPixels: 0 },
+            metadata: {},
+            sliceCount: 1,
+            imageSize: { rows: 512, cols: 512 },
+            fileNames: [],
+            _isDemo: true
+        };
+    }
+
     function loadSavedState() {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
-            if (!saved) return;
+            const parsed = saved ? JSON.parse(saved) : null;
+            const state = (parsed && parsed.brainHealthScore) ? parsed : null;
+            const isDemo = !state;
+            const dataToRender = state || getDemoState();
 
-            const state = JSON.parse(saved);
-            if (!state || !state.brainHealthScore) return;
-
-            // Restore file chips
-            if (state.fileNames && state.fileNames.length > 0) {
+            // Restore file chips (only for real saved sessions)
+            if (!isDemo && dataToRender.fileNames && dataToRender.fileNames.length > 0) {
                 fileList.innerHTML = '';
                 fileList.hidden = false;
-                for (const name of state.fileNames) {
+                for (const name of dataToRender.fileNames) {
                     const chip = document.createElement('span');
                     chip.className = 'file-chip';
                     chip.textContent = name;
@@ -885,7 +1037,7 @@
             // Show results section (without viewer since we don't have pixel data)
             resultsSection.hidden = false;
 
-            // Hide the viewer panel since we can't restore raw pixel data
+            // Hide the viewer panel
             const viewerPanel = resultsSection.querySelector('.viewer-panel');
             if (viewerPanel) viewerPanel.style.display = 'none';
 
@@ -893,14 +1045,18 @@
             const analysisPanel = resultsSection.querySelector('.analysis-panel');
             if (analysisPanel) analysisPanel.style.gridColumn = '1 / -1';
 
-            // Render the saved analysis results
-            renderAnalysisResults(state);
+            // Render results (demo or saved)
+            renderAnalysisResults(dataToRender);
 
-            // Add a restored indicator
+            // Add indicator label
             const indicator = document.createElement('span');
             indicator.className = 'persist-indicator';
-            indicator.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Saved session restored`;
-            const heading = analysisPanel.querySelector('h2');
+            if (isDemo) {
+                indicator.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Demo data`;
+            } else {
+                indicator.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Saved session restored`;
+            }
+            const heading = analysisPanel ? analysisPanel.querySelector('h2') : null;
             if (heading) heading.appendChild(indicator);
 
         } catch (e) {
