@@ -202,7 +202,10 @@ const FreeSurferHandler = (() => {
             const subject = file.name.replace(/\.stats$/i, '') || 'subject';
             const rows    = computeRows(regions, etiv, subject);
 
-            if (statusEl) statusEl.hidden = true;
+            const regionCount = Object.keys(regions).length;
+            const etivNote = etiv ? `, eTIV ${(etiv / 1000).toFixed(0)} cm³` : '';
+            showStatus(`✓ Loaded ${file.name} — ${regionCount} regions parsed${etivNote}. Dashboard updated.`, false);
+            if (statusEl) statusEl.className = 'vm-status vm-status--success';
 
             if (typeof VolumetricsDashboard !== 'undefined' && VolumetricsDashboard.ingestRows) {
                 VolumetricsDashboard.ingestRows(rows, file.name);
