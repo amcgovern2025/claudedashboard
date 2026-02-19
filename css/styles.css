@@ -1056,13 +1056,24 @@ footer {
 
 #passcode-overlay {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
     z-index: 9999;
     background: linear-gradient(135deg, #0a1f2e 0%, #1a5276 55%, #0e2f44 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     transition: opacity 0.4s ease;
+    overflow: hidden;
+}
+
+/* Prevent scrolling while overlay is active */
+body:has(#passcode-overlay:not(.unlocking)) {
+    overflow: hidden;
 }
 
 /* Hide overlay without flash when already authenticated */
