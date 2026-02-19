@@ -465,26 +465,28 @@
         }
         analysisResults.appendChild(subScoresSection);
 
-        // Histogram
-        const histSection = createSection('Intensity Histogram', false);
-        const histBody = histSection.querySelector('.analysis-section-body');
-        const histWrapper = document.createElement('div');
-        histWrapper.className = 'histogram-wrapper';
-        const histCanvas = document.createElement('canvas');
-        histCanvas.width = 512;
-        histCanvas.height = 120;
-        histWrapper.appendChild(histCanvas);
-        histBody.appendChild(histWrapper);
-        drawHistogram(histCanvas, results.histogram);
+        // Histogram (only available for DICOM pixel data, not FreeSurfer)
+        if (results.histogram) {
+            const histSection = createSection('Intensity Histogram', false);
+            const histBody = histSection.querySelector('.analysis-section-body');
+            const histWrapper = document.createElement('div');
+            histWrapper.className = 'histogram-wrapper';
+            const histCanvas = document.createElement('canvas');
+            histCanvas.width = 512;
+            histCanvas.height = 120;
+            histWrapper.appendChild(histCanvas);
+            histBody.appendChild(histWrapper);
+            drawHistogram(histCanvas, results.histogram);
 
-        const statsP = document.createElement('p');
-        statsP.style.cssText = 'font-size:0.8rem;color:#7f8c8d;margin-top:0.5rem;';
-        statsP.textContent = `Mean: ${results.globalStats.mean.toFixed(1)} | ` +
-            `Std Dev: ${results.globalStats.stdDev.toFixed(1)} | ` +
-            `Median: ${results.globalStats.median.toFixed(1)} | ` +
-            `Range: ${results.globalStats.min.toFixed(0)}–${results.globalStats.max.toFixed(0)}`;
-        histBody.appendChild(statsP);
-        analysisResults.appendChild(histSection);
+            const statsP = document.createElement('p');
+            statsP.style.cssText = 'font-size:0.8rem;color:#7f8c8d;margin-top:0.5rem;';
+            statsP.textContent = `Mean: ${results.globalStats.mean.toFixed(1)} | ` +
+                `Std Dev: ${results.globalStats.stdDev.toFixed(1)} | ` +
+                `Median: ${results.globalStats.median.toFixed(1)} | ` +
+                `Range: ${results.globalStats.min.toFixed(0)}–${results.globalStats.max.toFixed(0)}`;
+            histBody.appendChild(statsP);
+            analysisResults.appendChild(histSection);
+        }
 
         // Findings sections with Mosconi explanations
         const findingExplanations = {
@@ -673,9 +675,10 @@
             {
                 metric: 'Tissue Homogeneity',
                 recommended: '> 60',
-                yours: texture.homogeneityScore.toFixed(1),
-                status: texture.homogeneityScore > 60 ? 'good' :
-                    texture.homogeneityScore > 40 ? 'moderate' : 'concern'
+                yours: texture.homogeneityScore != null ? texture.homogeneityScore.toFixed(1) : '—',
+                status: texture.homogeneityScore != null
+                    ? (texture.homogeneityScore > 60 ? 'good' : texture.homogeneityScore > 40 ? 'moderate' : 'concern')
+                    : 'moderate'
             }
         ];
 
@@ -753,11 +756,18 @@
     }
 
     function createMetricBar(label, value) {
-        const clamped = Math.max(0, Math.min(100, value));
-        const level = clamped >= 70 ? 'good' : clamped >= 45 ? 'moderate' : 'concern';
-
         const row = document.createElement('div');
         row.className = 'metric-row';
+        if (value == null) {
+            row.innerHTML = `
+                <span class="metric-label">${label}</span>
+                <div class="metric-bar-bg"></div>
+                <span class="metric-value" style="color:#aaa">N/A</span>
+            `;
+            return row;
+        }
+        const clamped = Math.max(0, Math.min(100, value));
+        const level = clamped >= 70 ? 'good' : clamped >= 45 ? 'moderate' : 'concern';
         row.innerHTML = `
             <span class="metric-label">${label}</span>
             <div class="metric-bar-bg">
@@ -1014,6 +1024,145 @@
         };
     }
 
+    /* ======== FreeSurfer → Mosconi Bridge ======== */
+
+    function buildResultsFromFreeSurfer({ regions, etiv, fileName }) {
+        // Aggregate volumes
+        const cortex      = (regions.cortex_L || 0) + (regions.cortex_R || 0);
+        const wm          = (regions.wm_L     || 0) + (regions.wm_R     || 0);
+        const ventricles  = (regions.lat_ventricle_L || 0) + (regions.lat_ventricle_R || 0)
+                          + (regions.ventricle_3rd   || 0) + (regions.ventricle_4th   || 0);
+        const subcortical = (regions.hippocampus_L || 0) + (regions.hippocampus_R || 0)
+                          + (regions.amygdala_L    || 0) + (regions.amygdala_R    || 0)
+                          + (regions.thalamus_L    || 0) + (regions.thalamus_R    || 0)
+                          + (regions.caudate_L     || 0) + (regions.caudate_R     || 0)
+                          + (regions.putamen_L     || 0) + (regions.putamen_R     || 0)
+                          + (regions.cerebellum_L  || 0) + (regions.cerebellum_R  || 0)
+                          + (regions.brainstem     || 0);
+        const parenchyma  = cortex + wm + subcortical;
+
+        // Tissue fractions relative to eTIV
+        const grayMatter            = etiv ? cortex      / etiv : 0;
+        const whiteMatter           = etiv ? wm          / etiv : 0;
+        const csf                   = etiv ? ventricles  / etiv : 0;
+        const gmToWmRatio           = wm > 0 ? cortex / wm : 0;
+        const brainParenchymaFraction = etiv ? parenchyma / etiv : 0;
+        const ventricularRatio      = etiv ? ventricles  / etiv : 0;
+
+        // Hemispheric symmetry from all paired structures
+        const pairs = [
+            [regions.hippocampus_L, regions.hippocampus_R],
+            [regions.amygdala_L,    regions.amygdala_R   ],
+            [regions.cortex_L,      regions.cortex_R     ],
+            [regions.wm_L,          regions.wm_R         ],
+            [regions.thalamus_L,    regions.thalamus_R   ],
+            [regions.caudate_L,     regions.caudate_R    ],
+            [regions.putamen_L,     regions.putamen_R    ],
+            [regions.lat_ventricle_L, regions.lat_ventricle_R],
+            [regions.cerebellum_L,  regions.cerebellum_R ],
+        ].filter(([l, r]) => l !== undefined && r !== undefined);
+
+        const avgAsymmetry = pairs.length
+            ? pairs.reduce((s, [l, r]) => {
+                  const avg = (l + r) / 2;
+                  return s + (avg > 0 ? Math.abs(l - r) / avg : 0);
+              }, 0) / pairs.length
+            : 0;
+        const symmetryScore = Math.max(0, Math.min(100, (1 - avgAsymmetry) * 100));
+
+        // Hippocampal asymmetry as medial-temporal proxy
+        const hL = regions.hippocampus_L, hR = regions.hippocampus_R;
+        const temporalAsymmetry = (hL !== undefined && hR !== undefined && (hL + hR) > 0)
+            ? Math.abs(hL - hR) / ((hL + hR) / 2) : 0;
+
+        // Sub-scores (0–100)
+        const tissueBalance = Math.round(
+            ((grayMatter  >= 0.35 && grayMatter  <= 0.45 ? 100 : grayMatter  > 0.25 ? 65 : 35) +
+             (whiteMatter >= 0.25 && whiteMatter <= 0.40 ? 100 : whiteMatter > 0.20 ? 65 : 35)) / 2
+        );
+        const atrophyScore     = Math.round(brainParenchymaFraction > 0.70 ? 90 : brainParenchymaFraction > 0.55 ? 65 : 35);
+        const symmetrySubScore = Math.round(symmetryScore);
+        const composite        = Math.round((tissueBalance + symmetrySubScore + atrophyScore + 75) / 4);
+        const level            = composite >= 70 ? 'good' : composite >= 50 ? 'moderate' : 'concern';
+
+        const hippVol   = ((hL || 0) + (hR || 0)) / 1000;
+        const hippPctIcv = etiv ? (((hL || 0) + (hR || 0)) / etiv * 100) : null;
+
+        return {
+            brainHealthScore: {
+                composite, level,
+                subScores: { tissueBalance, symmetry: symmetrySubScore, atrophy: atrophyScore, texture: null, regionalBalance: atrophyScore }
+            },
+            tissueComposition: { grayMatter, whiteMatter, csf, gmToWmRatio },
+            symmetry:   { symmetryScore, overallRatio: 1, temporalAsymmetry },
+            atrophy:    { brainParenchymaFraction, atrophyIndex: 1 - brainParenchymaFraction, ventricularRatio },
+            texture:    { homogeneityScore: null },
+            globalStats: null,
+            histogram:   null,
+            findings: [
+                {
+                    category: 'Tissue Composition (Mosconi Structural Biomarkers)',
+                    items: [
+                        { title: 'Gray Matter (Cerebral Cortex)',
+                          detail: `${(grayMatter * 100).toFixed(1)}% of eTIV (FreeSurfer cerebral cortex L+R). Gray matter volume is a key MRI biomarker in Mosconi's framework for dementia risk.`,
+                          indicator: grayMatter >= 0.35 ? 'normal' : grayMatter > 0.25 ? 'caution' : 'concern' },
+                        { title: 'White Matter (Cerebral WM)',
+                          detail: `${(whiteMatter * 100).toFixed(1)}% of eTIV (FreeSurfer cerebral white matter L+R). White matter integrity is an indicator of neural connectivity.`,
+                          indicator: whiteMatter >= 0.25 ? 'normal' : 'caution' },
+                        { title: 'Gray-to-White Matter Ratio',
+                          detail: `Ratio: ${gmToWmRatio.toFixed(2)}. Balance between cortical gray and white matter.`,
+                          indicator: gmToWmRatio >= 1.0 && gmToWmRatio <= 1.5 ? 'normal' : 'caution' },
+                    ]
+                },
+                {
+                    category: 'Regional Analysis (Mosconi Key Brain Regions)',
+                    items: [
+                        { title: 'Hippocampal Volume',
+                          detail: `${hippVol.toFixed(2)} cm³${hippPctIcv !== null ? ` (${hippPctIcv.toFixed(3)}% of eTIV)` : ''}. The hippocampus is among the first regions affected in Alzheimer's disease (Mosconi et al., 2005).`,
+                          indicator: hippPctIcv !== null && hippPctIcv >= 0.3 ? 'normal' : 'caution' },
+                        { title: 'Amygdala Volume',
+                          detail: `${(((regions.amygdala_L || 0) + (regions.amygdala_R || 0)) / 1000).toFixed(2)} cm³. Amygdala atrophy correlates with hippocampal changes in AD risk.`,
+                          indicator: 'normal' },
+                        { title: 'Ventricular Volume',
+                          detail: `${(ventricularRatio * 100).toFixed(1)}% of eTIV. Enlarged ventricles reflect compensatory expansion from parenchymal loss.`,
+                          indicator: ventricularRatio < 0.03 ? 'normal' : ventricularRatio < 0.06 ? 'caution' : 'concern' },
+                    ]
+                },
+                {
+                    category: 'Hemispheric Symmetry',
+                    items: [
+                        { title: 'Overall Symmetry',
+                          detail: `Score: ${symmetryScore.toFixed(1)}/100, derived from L/R volume ratios across all paired FreeSurfer structures. ${symmetryScore > 85 ? 'Within normal range.' : 'Some asymmetry present.'}`,
+                          indicator: symmetryScore > 85 ? 'normal' : symmetryScore > 70 ? 'caution' : 'concern' },
+                        { title: 'Hippocampal Asymmetry',
+                          detail: `${(temporalAsymmetry * 100).toFixed(1)}% L/R difference. Mosconi identifies medial temporal asymmetry as an early Alzheimer's risk signal.`,
+                          indicator: temporalAsymmetry < 0.05 ? 'normal' : temporalAsymmetry < 0.10 ? 'caution' : 'concern' },
+                    ]
+                },
+                {
+                    category: 'Brain Atrophy Indicators',
+                    items: [
+                        { title: 'Brain Parenchyma Fraction',
+                          detail: `${(brainParenchymaFraction * 100).toFixed(1)}% of eTIV (cortex + WM + subcortical). ${brainParenchymaFraction > 0.70 ? 'Above the 70% threshold for healthy brain volume.' : 'Below 70% — consider clinical follow-up.'}`,
+                          indicator: brainParenchymaFraction > 0.70 ? 'normal' : brainParenchymaFraction > 0.55 ? 'caution' : 'concern' },
+                        { title: 'Estimated Total Intracranial Volume',
+                          detail: etiv ? `${(etiv / 1000).toFixed(0)} cm³. Used to normalise all volumetric measurements.` : 'Not found in file — normalised metrics are unavailable.',
+                          indicator: 'normal' },
+                    ]
+                },
+            ],
+            recommendations: [
+                { title: 'Mediterranean Diet',      detail: 'Mosconi\'s research shows Mediterranean diet adherence is associated with 1.5–2.0% greater brain volume preservation over 5 years. Prioritise olive oil, fatty fish, legumes, and leafy greens.' },
+                { title: 'Aerobic Exercise',        detail: 'Mosconi\'s studies link regular aerobic activity (150 min/week) to increased hippocampal volume and improved cerebral blood flow — two key structural biomarkers.' },
+                { title: 'Quality Sleep',           detail: 'Adequate sleep (7–9 hours) supports glymphatic clearance of amyloid-beta. Mosconi\'s cohort studies show sleep disruption correlates with accelerated brain aging markers.' },
+                { title: 'Cognitive Engagement',   detail: 'Sustained intellectual activity builds cognitive reserve, which Mosconi identifies as protective against the clinical expression of neurodegeneration even in the presence of pathology.' },
+            ],
+            volumetric: { totalSlices: 0, brainExtent: 0, crossSliceConsistency: 0, totalBrainPixels: 0 },
+            metadata: { source: fileName },
+            sliceCount: 0, imageSize: { rows: 0, cols: 0 }, fileNames: [fileName], _isFreeSurfer: true,
+        };
+    }
+
     function loadSavedState() {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -1069,5 +1218,23 @@
 
     // On page load, restore saved state if available
     loadSavedState();
+
+    // When a FreeSurfer aseg.stats file is loaded, update the Mosconi Analysis section
+    document.addEventListener('freesurfer-data', function(e) {
+        const results = buildResultsFromFreeSurfer(e.detail);
+        renderAnalysisResults(results);
+
+        // Swap the badge on the Mosconi heading
+        const analysisPanel = resultsSection.querySelector('.analysis-panel');
+        const heading = analysisPanel ? analysisPanel.querySelector('h2') : null;
+        if (heading) {
+            const old = heading.querySelector('.persist-indicator');
+            if (old) old.remove();
+            const badge = document.createElement('span');
+            badge.className = 'persist-indicator';
+            badge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> FreeSurfer data`;
+            heading.appendChild(badge);
+        }
+    });
 
 })();

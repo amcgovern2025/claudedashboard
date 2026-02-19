@@ -212,6 +212,10 @@ const FreeSurferHandler = (() => {
             } else {
                 console.error('FreeSurferHandler: VolumetricsDashboard.ingestRows not available.');
             }
+
+            document.dispatchEvent(new CustomEvent('freesurfer-data', {
+                detail: { regions, etiv, fileName: file.name }
+            }));
         };
 
         reader.onerror = () => showStatus('Failed to read file.', true);
