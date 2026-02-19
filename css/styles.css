@@ -812,6 +812,7 @@ footer {
 }
 .vm-status--loading { background: #eaf2f8; color: var(--color-primary); border: 1px solid #bdd7ee; }
 .vm-status--error   { background: #fdedec; color: #922b21;               border: 1px solid #f5b7b1; }
+.vm-status--success { background: #eafaf1; color: #1e8449;               border: 1px solid #a9dfbf; }
 
 .vm-load-controls {
     background: #f8f9fa;
