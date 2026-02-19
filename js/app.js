@@ -1105,13 +1105,13 @@
                     items: [
                         { title: 'Gray Matter (Cerebral Cortex)',
                           detail: `${(grayMatter * 100).toFixed(1)}% of eTIV (FreeSurfer cerebral cortex L+R). Gray matter volume is a key MRI biomarker in Mosconi's framework for dementia risk.`,
-                          indicator: grayMatter >= 0.35 ? 'normal' : grayMatter > 0.25 ? 'caution' : 'concern' },
+                          indicator: grayMatter >= 0.35 ? 'normal' : grayMatter > 0.25 ? 'borderline' : 'atypical' },
                         { title: 'White Matter (Cerebral WM)',
                           detail: `${(whiteMatter * 100).toFixed(1)}% of eTIV (FreeSurfer cerebral white matter L+R). White matter integrity is an indicator of neural connectivity.`,
-                          indicator: whiteMatter >= 0.25 ? 'normal' : 'caution' },
+                          indicator: whiteMatter >= 0.25 ? 'normal' : 'borderline' },
                         { title: 'Gray-to-White Matter Ratio',
                           detail: `Ratio: ${gmToWmRatio.toFixed(2)}. Balance between cortical gray and white matter.`,
-                          indicator: gmToWmRatio >= 1.0 && gmToWmRatio <= 1.5 ? 'normal' : 'caution' },
+                          indicator: gmToWmRatio >= 1.0 && gmToWmRatio <= 1.5 ? 'normal' : 'borderline' },
                     ]
                 },
                 {
@@ -1119,13 +1119,13 @@
                     items: [
                         { title: 'Hippocampal Volume',
                           detail: `${hippVol.toFixed(2)} cm³${hippPctIcv !== null ? ` (${hippPctIcv.toFixed(3)}% of eTIV)` : ''}. The hippocampus is among the first regions affected in Alzheimer's disease (Mosconi et al., 2005).`,
-                          indicator: hippPctIcv !== null && hippPctIcv >= 0.3 ? 'normal' : 'caution' },
+                          indicator: hippPctIcv !== null && hippPctIcv >= 0.3 ? 'normal' : 'borderline' },
                         { title: 'Amygdala Volume',
                           detail: `${(((regions.amygdala_L || 0) + (regions.amygdala_R || 0)) / 1000).toFixed(2)} cm³. Amygdala atrophy correlates with hippocampal changes in AD risk.`,
                           indicator: 'normal' },
                         { title: 'Ventricular Volume',
                           detail: `${(ventricularRatio * 100).toFixed(1)}% of eTIV. Enlarged ventricles reflect compensatory expansion from parenchymal loss.`,
-                          indicator: ventricularRatio < 0.03 ? 'normal' : ventricularRatio < 0.06 ? 'caution' : 'concern' },
+                          indicator: ventricularRatio < 0.03 ? 'normal' : ventricularRatio < 0.06 ? 'borderline' : 'atypical' },
                     ]
                 },
                 {
@@ -1133,10 +1133,10 @@
                     items: [
                         { title: 'Overall Symmetry',
                           detail: `Score: ${symmetryScore.toFixed(1)}/100, derived from L/R volume ratios across all paired FreeSurfer structures. ${symmetryScore > 85 ? 'Within normal range.' : 'Some asymmetry present.'}`,
-                          indicator: symmetryScore > 85 ? 'normal' : symmetryScore > 70 ? 'caution' : 'concern' },
+                          indicator: symmetryScore > 85 ? 'normal' : symmetryScore > 70 ? 'borderline' : 'atypical' },
                         { title: 'Hippocampal Asymmetry',
                           detail: `${(temporalAsymmetry * 100).toFixed(1)}% L/R difference. Mosconi identifies medial temporal asymmetry as an early Alzheimer's risk signal.`,
-                          indicator: temporalAsymmetry < 0.05 ? 'normal' : temporalAsymmetry < 0.10 ? 'caution' : 'concern' },
+                          indicator: temporalAsymmetry < 0.05 ? 'normal' : temporalAsymmetry < 0.10 ? 'borderline' : 'atypical' },
                     ]
                 },
                 {
@@ -1144,7 +1144,7 @@
                     items: [
                         { title: 'Brain Parenchyma Fraction',
                           detail: `${(brainParenchymaFraction * 100).toFixed(1)}% of eTIV (cortex + WM + subcortical). ${brainParenchymaFraction > 0.70 ? 'Above the 70% threshold for healthy brain volume.' : 'Below 70% — consider clinical follow-up.'}`,
-                          indicator: brainParenchymaFraction > 0.70 ? 'normal' : brainParenchymaFraction > 0.55 ? 'caution' : 'concern' },
+                          indicator: brainParenchymaFraction > 0.70 ? 'normal' : brainParenchymaFraction > 0.55 ? 'borderline' : 'atypical' },
                         { title: 'Estimated Total Intracranial Volume',
                           detail: etiv ? `${(etiv / 1000).toFixed(0)} cm³. Used to normalise all volumetric measurements.` : 'Not found in file — normalised metrics are unavailable.',
                           indicator: 'normal' },
@@ -1221,19 +1221,31 @@
 
     // When a FreeSurfer aseg.stats file is loaded, update the Mosconi Analysis section
     document.addEventListener('freesurfer-data', function(e) {
-        const results = buildResultsFromFreeSurfer(e.detail);
-        renderAnalysisResults(results);
+        try {
+            resultsSection.hidden = false;
+            const results = buildResultsFromFreeSurfer(e.detail);
+            renderAnalysisResults(results);
 
-        // Swap the badge on the Mosconi heading
-        const analysisPanel = resultsSection.querySelector('.analysis-panel');
-        const heading = analysisPanel ? analysisPanel.querySelector('h2') : null;
-        if (heading) {
-            const old = heading.querySelector('.persist-indicator');
-            if (old) old.remove();
-            const badge = document.createElement('span');
-            badge.className = 'persist-indicator';
-            badge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> FreeSurfer data`;
-            heading.appendChild(badge);
+            // Swap the badge on the Mosconi heading
+            const analysisPanel = resultsSection.querySelector('.analysis-panel');
+            const heading = analysisPanel ? analysisPanel.querySelector('h2') : null;
+            if (heading) {
+                const old = heading.querySelector('.persist-indicator');
+                if (old) old.remove();
+                const badge = document.createElement('span');
+                badge.className = 'persist-indicator';
+                badge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> FreeSurfer data`;
+                heading.appendChild(badge);
+                heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch (err) {
+            console.error('FreeSurfer → Mosconi update failed:', err);
+            const statusEl = document.getElementById('fs-status');
+            if (statusEl) {
+                statusEl.hidden = false;
+                statusEl.className = 'vm-status vm-status--error';
+                statusEl.textContent = 'Mosconi section update failed: ' + err.message;
+            }
         }
     });
 
