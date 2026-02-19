@@ -383,7 +383,7 @@
     /* ======== Analysis ======== */
 
     function runAnalysis() {
-        analysisLoading.hidden = false;
+        analysisLoading.style.display = 'flex';
         analysisResults.innerHTML = '';
 
         // Run analysis asynchronously to avoid blocking the UI
@@ -394,7 +394,7 @@
 
                 if (results.error) {
                     showError(results.error);
-                    analysisLoading.hidden = true;
+                    analysisLoading.style.display = 'none';
                     return;
                 }
 
@@ -403,7 +403,7 @@
                 showError(`Analysis error: ${err.message}`);
                 console.error(err);
             }
-            analysisLoading.hidden = true;
+            analysisLoading.style.display = 'none';
         }, 100);
     }
 
@@ -1033,6 +1033,9 @@
                     fileList.appendChild(chip);
                 }
             }
+
+            // Ensure spinner is never visible during static/demo display
+            analysisLoading.style.display = 'none';
 
             // Show results section (without viewer since we don't have pixel data)
             resultsSection.hidden = false;
