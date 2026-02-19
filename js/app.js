@@ -1219,11 +1219,12 @@
     // On page load, restore saved state if available
     loadSavedState();
 
-    // When a FreeSurfer aseg.stats file is loaded, update the Mosconi Analysis section
-    document.addEventListener('freesurfer-data', function(e) {
+    // When a FreeSurfer aseg.stats file is loaded, update the Mosconi Analysis section.
+    // Called directly by freesurfer-handler.js after parsing.
+    window.updateMosconiFromFreeSurfer = function(detail) {
         try {
             resultsSection.hidden = false;
-            const results = buildResultsFromFreeSurfer(e.detail);
+            const results = buildResultsFromFreeSurfer(detail);
             renderAnalysisResults(results);
 
             // Swap the badge on the Mosconi heading
@@ -1247,6 +1248,6 @@
                 statusEl.textContent = 'Mosconi section update failed: ' + err.message;
             }
         }
-    });
+    };
 
 })();
