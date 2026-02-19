@@ -1085,6 +1085,31 @@
         const composite        = Math.round((tissueBalance + symmetrySubScore + atrophyScore + 75) / 4);
         const level            = composite >= 70 ? 'good' : composite >= 50 ? 'moderate' : 'concern';
 
+        // Verification log — visible in DevTools console
+        console.group('Mosconi Score Verification');
+        console.log('Raw regions from aseg.stats:', JSON.parse(JSON.stringify(regions)));
+        console.log('eTIV (mm³):', etiv);
+        console.log('--- Aggregates ---');
+        console.log('Cortex L+R (mm³):', cortex);
+        console.log('WM L+R (mm³):', wm);
+        console.log('Ventricles (mm³):', ventricles);
+        console.log('Subcortical (mm³):', regions.hippocampus_L, regions.hippocampus_R, regions.amygdala_L, regions.amygdala_R, regions.thalamus_L, regions.thalamus_R);
+        console.log('Parenchyma (mm³):', parenchyma);
+        console.log('--- Fractions ---');
+        console.log('Gray Matter %:', (grayMatter * 100).toFixed(2));
+        console.log('White Matter %:', (whiteMatter * 100).toFixed(2));
+        console.log('CSF (ventricular) %:', (csf * 100).toFixed(2));
+        console.log('GM/WM ratio:', gmToWmRatio.toFixed(3));
+        console.log('Brain Parenchyma Fraction %:', (brainParenchymaFraction * 100).toFixed(2));
+        console.log('Hemispheric Symmetry score:', symmetryScore.toFixed(2));
+        console.log('--- Sub-scores ---');
+        console.log('Tissue Balance sub-score:', tissueBalance);
+        console.log('Atrophy sub-score:', atrophyScore);
+        console.log('Symmetry sub-score:', symmetrySubScore);
+        console.log('--- Composite ---');
+        console.log(`Composite = round((${tissueBalance} + ${symmetrySubScore} + ${atrophyScore} + 75) / 4) = ${composite}`);
+        console.groupEnd();
+
         const hippVol   = ((hL || 0) + (hR || 0)) / 1000;
         const hippPctIcv = etiv ? (((hL || 0) + (hR || 0)) / etiv * 100) : null;
 
