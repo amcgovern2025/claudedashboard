@@ -416,16 +416,16 @@
         const scoreCard = createScoreCard(results.brainHealthScore);
         analysisResults.appendChild(scoreCard);
 
-        // Mosconi context explanation for the score
-        const scoreExplanation = createMosconiExplanation(
+        // Research context explanation for the score
+        const scoreExplanation = createResearchExplanation(
             'Understanding Your Composite Score',
             `This score is derived from five components of structural MRI analysis, weighted ` +
-            `according to their diagnostic significance in Mosconi's research framework. ` +
+            `according to their diagnostic significance in structural MRI research. ` +
             `Tissue balance and structural integrity receive the highest weight (25% each) ` +
-            `because Mosconi's longitudinal studies show gray matter volume loss and brain ` +
+            `because longitudinal studies show gray matter volume loss and brain ` +
             `parenchyma reduction are among the earliest detectable structural biomarkers — ` +
             `often appearing years before clinical symptoms of cognitive decline.`,
-            'Mosconi et al., "Brain glucose metabolism in the early and specific diagnosis of Alzheimer\'s disease," European Journal of Nuclear Medicine, 2005'
+            '"Brain glucose metabolism in the early and specific diagnosis of Alzheimer\'s disease," European Journal of Nuclear Medicine, 2005'
         );
         analysisResults.appendChild(scoreExplanation);
 
@@ -433,19 +433,19 @@
         const comparisonSection = createReadingComparison(results);
         analysisResults.appendChild(comparisonSection);
 
-        // Mosconi explanation for the comparison
-        const compExplanation = createMosconiExplanation(
+        // Research explanation for the comparison
+        const compExplanation = createResearchExplanation(
             'Why These Ranges Matter',
-            `The recommended ranges are derived from Mosconi's structural MRI research on healthy brain aging. ` +
-            `Gray matter proportion reflects neuronal density — Mosconi's work shows that women in particular ` +
+            `The recommended ranges are derived from structural MRI research on healthy brain aging. ` +
+            `Gray matter proportion reflects neuronal density — research shows that women in particular ` +
             `can experience accelerated gray matter changes during perimenopause. The GM/WM ratio helps distinguish ` +
             `normal age-related changes from pathological atrophy patterns. Brain parenchyma fraction is the most ` +
             `robust single structural biomarker: values below 55% correlate strongly with increased CSF space, ` +
             `suggesting ventricular enlargement or sulcal widening — hallmarks of neurodegeneration. ` +
             `Hemispheric symmetry above 85% indicates balanced bilateral structure; asymmetry in the medial temporal ` +
-            `regions specifically may point toward early hippocampal changes that Mosconi identifies as a key ` +
+            `regions specifically may point toward early hippocampal changes that research identifies as a key ` +
             `Alzheimer's risk signal.`,
-            'Mosconi et al., "Reduced hippocampal metabolism in MCI and AD," Neurology, 2005; Mosconi, "Glucose metabolism in normal aging and Alzheimer\'s disease," 2013'
+            '"Reduced hippocampal metabolism in MCI and AD," Neurology, 2005; "Glucose metabolism in normal aging and Alzheimer\'s disease," 2013'
         );
         analysisResults.appendChild(compExplanation);
 
@@ -488,50 +488,49 @@
             analysisResults.appendChild(histSection);
         }
 
-        // Findings sections with Mosconi explanations
+        // Findings sections with research explanations
         const findingExplanations = {
-            'Tissue Composition (Mosconi Structural Biomarkers)': {
-                title: 'Mosconi on Tissue Composition',
-                body: `In Mosconi's framework, tissue composition from structural MRI serves as a proxy ` +
+            'Tissue Composition (Structural Biomarkers)': {
+                title: 'Tissue Composition',
+                body: `In this framework, tissue composition from structural MRI serves as a proxy ` +
                     `for what FDG-PET measures metabolically. Regions with gray matter loss on MRI ` +
-                    `correspond closely to areas showing hypometabolism on PET. Her research demonstrated ` +
+                    `correspond closely to areas showing hypometabolism on PET. Research has demonstrated ` +
                     `that the ratio of gray matter to total brain volume decreases at predictable rates ` +
                     `in healthy aging (~0.5% per year after age 60), but accelerates significantly ` +
                     `(1-2% per year) in preclinical Alzheimer's — often a decade before diagnosis.`,
-                citation: 'Mosconi et al., "MCI conversion to dementia and the APOE genotype," Neurology, 2007'
+                citation: '"MCI conversion to dementia and the APOE genotype," Neurology, 2007'
             },
-            'Regional Analysis (Mosconi Key Brain Regions)': {
-                title: 'Mosconi on Regional Vulnerability',
-                body: `Mosconi's PET and MRI research established a hierarchy of regional vulnerability ` +
+            'Regional Analysis (Key Brain Regions)': {
+                title: 'Regional Vulnerability',
+                body: `PET and MRI research has established a hierarchy of regional vulnerability ` +
                     `in Alzheimer's disease. The hippocampus and entorhinal cortex show changes first, ` +
                     `followed by the posterior cingulate cortex, then lateral temporal and parietal lobes. ` +
                     `The frontal lobes are typically affected later. This "Braak staging" pattern on structural ` +
-                    `MRI mirrors Mosconi's metabolic findings, making regional intensity comparison valuable ` +
-                    `even without PET imaging. Her work also shows that individuals with a maternal family ` +
+                    `MRI mirrors metabolic findings, making regional intensity comparison valuable ` +
+                    `even without PET imaging. Research also shows that individuals with a maternal family ` +
                     `history of Alzheimer's show these regional changes earlier than those with paternal history.`,
-                citation: 'Mosconi et al., "Maternal family history of Alzheimer\'s disease predisposes to reduced brain glucose metabolism," PNAS, 2007'
+                citation: '"Maternal family history of Alzheimer\'s disease predisposes to reduced brain glucose metabolism," PNAS, 2007'
             },
             'Hemispheric Symmetry': {
-                title: 'Mosconi on Brain Symmetry',
-                body: `While Mosconi's primary focus is metabolic imaging, her structural MRI work ` +
-                    `confirms that healthy brains maintain high bilateral symmetry. Asymmetric atrophy ` +
-                    `— particularly in the medial temporal lobes — is associated with lateralized ` +
+                title: 'Brain Symmetry',
+                body: `Structural MRI research confirms that healthy brains maintain high bilateral symmetry. ` +
+                    `Asymmetric atrophy — particularly in the medial temporal lobes — is associated with lateralized ` +
                     `pathology and can help distinguish Alzheimer's (typically symmetric early on) from ` +
                     `frontotemporal dementia (often asymmetric). Temporal lobe asymmetry above 10% ` +
-                    `warrants closer clinical attention in her framework.`,
-                citation: 'Mosconi, "Brain glucose metabolism in the early and specific diagnosis of Alzheimer\'s disease," European Journal of Nuclear Medicine, 2005'
+                    `warrants closer clinical attention.`,
+                citation: '"Brain glucose metabolism in the early and specific diagnosis of Alzheimer\'s disease," European Journal of Nuclear Medicine, 2005'
             },
             'Brain Atrophy Indicators': {
-                title: 'Mosconi on Brain Atrophy',
-                body: `Brain atrophy assessment is central to Mosconi's structural biomarker research. ` +
-                    `Her studies show that brain parenchyma fraction (the ratio of brain tissue to total ` +
+                title: 'Brain Atrophy',
+                body: `Brain atrophy assessment is central to structural biomarker research. ` +
+                    `Studies show that brain parenchyma fraction (the ratio of brain tissue to total ` +
                     `intracranial volume) declines with age but that the rate of decline is a stronger ` +
-                    `predictor of cognitive outcomes than the absolute value. Importantly, Mosconi's ` +
+                    `predictor of cognitive outcomes than the absolute value. Importantly, published ` +
                     `nutrition research demonstrates that Mediterranean diet adherence is associated ` +
                     `with 1.5-2.0% greater brain volume preservation over 5 years compared to ` +
-                    `Western dietary patterns — an effect she attributes to anti-inflammatory and ` +
+                    `Western dietary patterns — an effect attributed to anti-inflammatory and ` +
                     `antioxidant neuroprotection.`,
-                citation: 'Mosconi et al., "Mediterranean diet and brain structure in a multiethnic elderly cohort," Neurology, 2014'
+                citation: '"Mediterranean diet and brain structure in a multiethnic elderly cohort," Neurology, 2014'
             }
         };
 
@@ -542,10 +541,10 @@
                 body.appendChild(createFindingItem(item));
             }
 
-            // Add Mosconi explanation after each finding category
+            // Add research explanation after each finding category
             const explanation = findingExplanations[finding.category];
             if (explanation) {
-                body.appendChild(createMosconiExplanation(
+                body.appendChild(createResearchExplanation(
                     explanation.title, explanation.body, explanation.citation
                 ));
             }
@@ -572,7 +571,7 @@
         }
 
         // Recommendations
-        const recSection = createSection('Recommendations (Mosconi Research-Based)', true);
+        const recSection = createSection('Lifestyle Recommendations', true);
         const recBody = recSection.querySelector('.analysis-section-body');
         const recList = document.createElement('ul');
         recList.className = 'recommendation-list';
@@ -698,11 +697,11 @@
         return container;
     }
 
-    /* ======== Mosconi Explanation Builder ======== */
+    /* ======== Research Explanation Builder ======== */
 
-    function createMosconiExplanation(title, bodyText, citation) {
+    function createResearchExplanation(title, bodyText, citation) {
         const div = document.createElement('div');
-        div.className = 'mosconi-explanation';
+        div.className = 'research-explanation';
         div.innerHTML = `
             <div class="explanation-title">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -927,16 +926,16 @@
             histogram: { counts, bins },
             findings: [
                 {
-                    category: 'Tissue Composition (Mosconi Structural Biomarkers)',
+                    category: 'Tissue Composition (Structural Biomarkers)',
                     items: [
                         {
                             title: 'Gray Matter Proportion',
-                            detail: '41.0% of brain tissue. Mosconi\'s research identifies gray matter volume as a key MRI biomarker for dementia risk assessment. Changes in gray matter are among the earliest structural indicators.',
+                            detail: '41.0% of brain tissue. Published research identifies gray matter volume as a key MRI biomarker for dementia risk assessment. Changes in gray matter are among the earliest structural indicators.',
                             indicator: 'normal'
                         },
                         {
                             title: 'White Matter Proportion',
-                            detail: '33.0% of brain tissue. White matter integrity is tracked in Mosconi\'s research as an indicator of neural connectivity.',
+                            detail: '33.0% of brain tissue. White matter integrity is tracked in published research as an indicator of neural connectivity.',
                             indicator: 'normal'
                         },
                         {
@@ -947,7 +946,7 @@
                     ]
                 },
                 {
-                    category: 'Regional Analysis (Mosconi Key Brain Regions)',
+                    category: 'Regional Analysis (Key Brain Regions)',
                     items: [
                         {
                             title: 'Medial Temporal / Hippocampal Region',
@@ -956,12 +955,12 @@
                         },
                         {
                             title: 'Posterior Cingulate Cortex',
-                            detail: 'Relative intensity: 91.8% of mean. Mosconi\'s FDG-PET work identified the posterior cingulate as a region showing early glucose metabolism decline in at-risk individuals.',
+                            detail: 'Relative intensity: 91.8% of mean. FDG-PET research identified the posterior cingulate as a region showing early glucose metabolism decline in at-risk individuals.',
                             indicator: 'normal'
                         },
                         {
                             title: 'Frontal Lobe',
-                            detail: 'Relative intensity: 96.1% of mean. Frontal lobe changes are tracked in Mosconi\'s research on brain aging and menopause-related metabolic shifts.',
+                            detail: 'Relative intensity: 96.1% of mean. Frontal lobe changes are tracked in published research on brain aging and menopause-related metabolic shifts.',
                             indicator: 'normal'
                         }
                     ]
@@ -976,7 +975,7 @@
                         },
                         {
                             title: 'Temporal Asymmetry',
-                            detail: 'Temporal asymmetry: 3.2%. Below the 5% threshold Mosconi identifies as warranting clinical attention.',
+                            detail: 'Temporal asymmetry: 3.2%. Below the 5% threshold research identifies as warranting clinical attention.',
                             indicator: 'normal'
                         }
                     ]
@@ -1000,19 +999,19 @@
             recommendations: [
                 {
                     title: 'Mediterranean Diet',
-                    detail: 'Mosconi\'s research shows Mediterranean diet adherence is associated with 1.5–2.0% greater brain volume preservation over 5 years. Prioritize olive oil, fatty fish, legumes, and leafy greens.'
+                    detail: 'Published research shows Mediterranean diet adherence is associated with 1.5–2.0% greater brain volume preservation over 5 years. Prioritize olive oil, fatty fish, legumes, and leafy greens.'
                 },
                 {
                     title: 'Aerobic Exercise',
-                    detail: 'Mosconi\'s studies link regular aerobic activity (150 min/week) to increased hippocampal volume and improved cerebral blood flow — two key structural biomarkers.'
+                    detail: 'Longitudinal studies link regular aerobic activity (150 min/week) to increased hippocampal volume and improved cerebral blood flow — two key structural biomarkers.'
                 },
                 {
                     title: 'Quality Sleep',
-                    detail: 'Adequate sleep (7–9 hours) supports glymphatic clearance of amyloid-beta. Mosconi\'s cohort studies show sleep disruption correlates with accelerated brain aging markers.'
+                    detail: 'Adequate sleep (7–9 hours) supports glymphatic clearance of amyloid-beta. Cohort studies show sleep disruption correlates with accelerated brain aging markers.'
                 },
                 {
                     title: 'Cognitive Engagement',
-                    detail: 'Sustained intellectual activity builds cognitive reserve, which Mosconi identifies as protective against the clinical expression of neurodegeneration even in the presence of pathology.'
+                    detail: 'Sustained intellectual activity builds cognitive reserve, which research identifies as protective against the clinical expression of neurodegeneration even in the presence of pathology.'
                 }
             ],
             volumetric: { totalSlices: 1, brainExtent: 0, crossSliceConsistency: 0, totalBrainPixels: 0 },
@@ -1024,7 +1023,7 @@
         };
     }
 
-    /* ======== FreeSurfer → Mosconi Bridge ======== */
+    /* ======== FreeSurfer → Analysis Bridge ======== */
 
     function buildResultsFromFreeSurfer({ regions, etiv, fileName }) {
         // Aggregate volumes
@@ -1086,7 +1085,7 @@
         const level            = composite >= 70 ? 'good' : composite >= 50 ? 'moderate' : 'concern';
 
         // Verification log — visible in DevTools console
-        console.group('Mosconi Score Verification');
+        console.group('Brain Health Score Verification');
         console.log('Raw regions from aseg.stats:', JSON.parse(JSON.stringify(regions)));
         console.log('eTIV (mm³):', etiv);
         console.log('--- Aggregates ---');
@@ -1126,10 +1125,10 @@
             histogram:   null,
             findings: [
                 {
-                    category: 'Tissue Composition (Mosconi Structural Biomarkers)',
+                    category: 'Tissue Composition (Structural Biomarkers)',
                     items: [
                         { title: 'Gray Matter (Cerebral Cortex)',
-                          detail: `${(grayMatter * 100).toFixed(1)}% of eTIV (FreeSurfer cerebral cortex L+R). Gray matter volume is a key MRI biomarker in Mosconi's framework for dementia risk.`,
+                          detail: `${(grayMatter * 100).toFixed(1)}% of eTIV (FreeSurfer cerebral cortex L+R). Gray matter volume is a key MRI biomarker for dementia risk.`,
                           indicator: grayMatter >= 0.35 ? 'normal' : grayMatter > 0.25 ? 'borderline' : 'atypical' },
                         { title: 'White Matter (Cerebral WM)',
                           detail: `${(whiteMatter * 100).toFixed(1)}% of eTIV (FreeSurfer cerebral white matter L+R). White matter integrity is an indicator of neural connectivity.`,
@@ -1140,10 +1139,10 @@
                     ]
                 },
                 {
-                    category: 'Regional Analysis (Mosconi Key Brain Regions)',
+                    category: 'Regional Analysis (Key Brain Regions)',
                     items: [
                         { title: 'Hippocampal Volume',
-                          detail: `${hippVol.toFixed(2)} cm³${hippPctIcv !== null ? ` (${hippPctIcv.toFixed(3)}% of eTIV)` : ''}. The hippocampus is among the first regions affected in Alzheimer's disease (Mosconi et al., 2005).`,
+                          detail: `${hippVol.toFixed(2)} cm³${hippPctIcv !== null ? ` (${hippPctIcv.toFixed(3)}% of eTIV)` : ''}. The hippocampus is among the first regions affected in Alzheimer's disease ('Brain glucose metabolism in the early and specific diagnosis of Alzheimer\'s disease,' European Journal of Nuclear Medicine, 2005).`,
                           indicator: hippPctIcv !== null && hippPctIcv >= 0.3 ? 'normal' : 'borderline' },
                         { title: 'Amygdala Volume',
                           detail: `${(((regions.amygdala_L || 0) + (regions.amygdala_R || 0)) / 1000).toFixed(2)} cm³. Amygdala atrophy correlates with hippocampal changes in AD risk.`,
@@ -1160,7 +1159,7 @@
                           detail: `Score: ${symmetryScore.toFixed(1)}/100, derived from L/R volume ratios across all paired FreeSurfer structures. ${symmetryScore > 85 ? 'Within normal range.' : 'Some asymmetry present.'}`,
                           indicator: symmetryScore > 85 ? 'normal' : symmetryScore > 70 ? 'borderline' : 'atypical' },
                         { title: 'Hippocampal Asymmetry',
-                          detail: `${(temporalAsymmetry * 100).toFixed(1)}% L/R difference. Mosconi identifies medial temporal asymmetry as an early Alzheimer's risk signal.`,
+                          detail: `${(temporalAsymmetry * 100).toFixed(1)}% L/R difference. Research identifies medial temporal asymmetry as an early Alzheimer's risk signal.`,
                           indicator: temporalAsymmetry < 0.05 ? 'normal' : temporalAsymmetry < 0.10 ? 'borderline' : 'atypical' },
                     ]
                 },
@@ -1177,10 +1176,10 @@
                 },
             ],
             recommendations: [
-                { title: 'Mediterranean Diet',      detail: 'Mosconi\'s research shows Mediterranean diet adherence is associated with 1.5–2.0% greater brain volume preservation over 5 years. Prioritise olive oil, fatty fish, legumes, and leafy greens.' },
-                { title: 'Aerobic Exercise',        detail: 'Mosconi\'s studies link regular aerobic activity (150 min/week) to increased hippocampal volume and improved cerebral blood flow — two key structural biomarkers.' },
-                { title: 'Quality Sleep',           detail: 'Adequate sleep (7–9 hours) supports glymphatic clearance of amyloid-beta. Mosconi\'s cohort studies show sleep disruption correlates with accelerated brain aging markers.' },
-                { title: 'Cognitive Engagement',   detail: 'Sustained intellectual activity builds cognitive reserve, which Mosconi identifies as protective against the clinical expression of neurodegeneration even in the presence of pathology.' },
+                { title: 'Mediterranean Diet',      detail: 'Published research shows Mediterranean diet adherence is associated with 1.5–2.0% greater brain volume preservation over 5 years. Prioritise olive oil, fatty fish, legumes, and leafy greens.' },
+                { title: 'Aerobic Exercise',        detail: 'Longitudinal studies link regular aerobic activity (150 min/week) to increased hippocampal volume and improved cerebral blood flow — two key structural biomarkers.' },
+                { title: 'Quality Sleep',           detail: 'Adequate sleep (7–9 hours) supports glymphatic clearance of amyloid-beta. Cohort studies show sleep disruption correlates with accelerated brain aging markers.' },
+                { title: 'Cognitive Engagement',   detail: 'Sustained intellectual activity builds cognitive reserve, which research identifies as protective against the clinical expression of neurodegeneration even in the presence of pathology.' },
             ],
             volumetric: { totalSlices: 0, brainExtent: 0, crossSliceConsistency: 0, totalBrainPixels: 0 },
             metadata: { source: fileName },
@@ -1244,15 +1243,15 @@
     // On page load, restore saved state if available
     loadSavedState();
 
-    // When a FreeSurfer aseg.stats file is loaded, update the Mosconi Analysis section.
+    // When a FreeSurfer aseg.stats file is loaded, update the Analysis section.
     // Called directly by freesurfer-handler.js after parsing.
-    window.updateMosconiFromFreeSurfer = function(detail) {
+    window.updateAnalysisFromFreeSurfer = function(detail) {
         try {
             resultsSection.hidden = false;
             const results = buildResultsFromFreeSurfer(detail);
             renderAnalysisResults(results);
 
-            // Swap the badge on the Mosconi heading
+            // Swap the badge on the analysis heading
             const analysisPanel = resultsSection.querySelector('.analysis-panel');
             const heading = analysisPanel ? analysisPanel.querySelector('h2') : null;
             if (heading) {
@@ -1265,12 +1264,12 @@
                 heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         } catch (err) {
-            console.error('FreeSurfer → Mosconi update failed:', err);
+            console.error('FreeSurfer → Analysis update failed:', err);
             const statusEl = document.getElementById('fs-status');
             if (statusEl) {
                 statusEl.hidden = false;
                 statusEl.className = 'vm-status vm-status--error';
-                statusEl.textContent = 'Mosconi section update failed: ' + err.message;
+                statusEl.textContent = 'Analysis section update failed: ' + err.message;
             }
         }
     };

@@ -222,8 +222,8 @@ const FreeSurferHandler = (() => {
                 console.error('FreeSurferHandler: VolumetricsDashboard.ingestRows not available.');
             }
 
-            if (typeof window.updateMosconiFromFreeSurfer === 'function') {
-                window.updateMosconiFromFreeSurfer({ regions, etiv, fileName: file.name });
+            if (typeof window.updateAnalysisFromFreeSurfer === 'function') {
+                window.updateAnalysisFromFreeSurfer({ regions, etiv, fileName: file.name });
             }
         };
 
