@@ -1,17 +1,16 @@
 /**
  * MRI Analysis Engine
- * Performs image-based brain analysis informed by Dr. Lisa Mosconi's
- * neurodiagnostic research framework.
+ * Performs image-based brain analysis informed by published neuroscience research.
  *
  * Analysis areas:
  *   1. Tissue composition (gray matter, white matter, CSF)
- *   2. Regional intensity analysis (mapped to Mosconi's key brain regions)
+ *   2. Regional intensity analysis (mapped to key brain regions)
  *   3. Hemispheric symmetry
  *   4. Brain parenchyma fraction (atrophy indicator)
  *   5. Intensity histogram characterization
  *   6. Texture / homogeneity metrics
  *   7. Composite brain health score
- *   8. Lifestyle recommendations from Mosconi's nutrition research
+ *   8. Lifestyle recommendations from published nutrition research
  */
 const AnalysisEngine = (() => {
     'use strict';
@@ -49,13 +48,13 @@ const AnalysisEngine = (() => {
             tissueComposition, symmetry, atrophy, texture, regionalAnalysis
         );
 
-        // Generate Mosconi-framework findings
+        // Generate brain health findings
         const findings = generateFindings(
             tissueComposition, regionalAnalysis, symmetry,
             atrophy, texture, brainHealthScore, metadata
         );
 
-        // Lifestyle recommendations based on Mosconi's research
+        // Lifestyle recommendations based on published research
         const recommendations = generateRecommendations(brainHealthScore, metadata);
 
         return {
@@ -144,7 +143,7 @@ const AnalysisEngine = (() => {
      *   - Gray matter: mid-range intensities
      *   - White matter: higher intensities (in T1-weighted)
      *
-     * Mosconi's research tracks gray matter volume and white matter integrity
+     * Brain health research tracks gray matter volume and white matter integrity
      * as key dementia risk biomarkers.
      */
     function analyzeTissueComposition(pixels, stats) {
@@ -187,7 +186,7 @@ const AnalysisEngine = (() => {
 
     /**
      * Regional intensity analysis.
-     * Divides the image into regions mapped to Mosconi's key brain areas:
+     * Divides the image into regions mapped to key brain areas:
      *   - Frontal (top center)
      *   - Temporal left/right (mid sides)
      *   - Parietal (top sides)
@@ -260,7 +259,7 @@ const AnalysisEngine = (() => {
 
     /**
      * Hemispheric symmetry analysis.
-     * Mosconi's research examines bilateral brain changes.
+     * Published research examines bilateral brain changes.
      * Asymmetry can indicate lateralized pathology.
      */
     function analyzeSymmetry(slice) {
@@ -292,7 +291,7 @@ const AnalysisEngine = (() => {
         const asymmetryIndex = diffCount > 0 ? diffSum / diffCount : 0;
         const overallRatio = rightMean > 0 ? leftMean / rightMean : 1;
 
-        // Regional symmetry (temporal lobes — key for Mosconi's hippocampal work)
+        // Regional symmetry (temporal lobes — key for hippocampal research)
         const temporalLeft = computeRegionStats(data, rows, cols,
             { startRow: 0.4, endRow: 0.7, startCol: 0.05, endCol: 0.3 });
         const temporalRight = computeRegionStats(data, rows, cols,
@@ -313,7 +312,7 @@ const AnalysisEngine = (() => {
 
     /**
      * Brain atrophy indicators.
-     * Brain parenchyma fraction is a key measure in Mosconi's structural MRI research.
+     * Brain parenchyma fraction is a key measure in structural MRI research.
      * Lower BPF suggests greater atrophy, associated with cognitive decline risk.
      */
     function analyzeAtrophyIndicators(pixels, stats, tissue) {
@@ -347,7 +346,7 @@ const AnalysisEngine = (() => {
     /**
      * Texture analysis — local homogeneity and entropy.
      * Abnormal textures can indicate microstructural changes
-     * in white matter (relevant to Mosconi's white matter research).
+     * in white matter (relevant to published white matter research).
      */
     function analyzeTexture(slice) {
         const { data, rows, cols } = slice;
@@ -548,12 +547,12 @@ const AnalysisEngine = (() => {
 
         // Tissue composition
         findings.push({
-            category: 'Tissue Composition (Mosconi Structural Biomarkers)',
+            category: 'Tissue Composition (Structural Biomarkers)',
             items: [
                 {
                     title: 'Gray Matter Proportion',
                     detail: `${(tissue.grayMatter * 100).toFixed(1)}% of brain tissue. ` +
-                        `Mosconi's research identifies gray matter volume as a key MRI biomarker ` +
+                        `Published research identifies gray matter volume as a key MRI biomarker ` +
                         `for dementia risk assessment. Changes in gray matter are among the ` +
                         `earliest structural indicators.`,
                     indicator: tissue.grayMatter > 0.35 ? 'normal' :
@@ -562,7 +561,7 @@ const AnalysisEngine = (() => {
                 {
                     title: 'White Matter Proportion',
                     detail: `${(tissue.whiteMatter * 100).toFixed(1)}% of brain tissue. ` +
-                        `White matter integrity is tracked in Mosconi's research as an indicator of ` +
+                        `White matter integrity is tracked in published research as an indicator of ` +
                         `neural connectivity. Reduced white matter PiB retention has been observed ` +
                         `in Alzheimer's research.`,
                     indicator: tissue.whiteMatter > 0.25 ? 'normal' :
@@ -579,19 +578,19 @@ const AnalysisEngine = (() => {
             ]
         });
 
-        // Regional analysis — Mosconi key regions
+        // Regional analysis — key brain regions
         const hippocampal = regions.hippocampalArea;
         const posteriorCingulate = regions.posteriorCingulate;
         const frontal = regions.frontal;
 
         findings.push({
-            category: 'Regional Analysis (Mosconi Key Brain Regions)',
+            category: 'Regional Analysis (Key Brain Regions)',
             items: [
                 {
                     title: 'Medial Temporal / Hippocampal Region',
                     detail: `Relative intensity: ${(hippocampal.relativeIntensity * 100).toFixed(1)}% of mean. ` +
-                        `The hippocampus is central to Mosconi's research — it is among the first ` +
-                        `regions to show metabolic decline and structural changes in Alzheimer's disease. ` +
+                        `The hippocampus is among the first regions to show metabolic decline and ` +
+                        `structural changes in Alzheimer's disease. ` +
                         `Reduced hippocampal metabolism often precedes clinical symptoms.`,
                     indicator: hippocampal.relativeIntensity > 0.9 ? 'normal' :
                         hippocampal.relativeIntensity > 0.8 ? 'borderline' : 'atypical'
@@ -599,7 +598,7 @@ const AnalysisEngine = (() => {
                 {
                     title: 'Posterior Cingulate Cortex',
                     detail: `Relative intensity: ${(posteriorCingulate.relativeIntensity * 100).toFixed(1)}% of mean. ` +
-                        `Mosconi's FDG-PET work identified the posterior cingulate as a region ` +
+                        `FDG-PET research identified the posterior cingulate as a region ` +
                         `showing early glucose metabolism decline in at-risk individuals.`,
                     indicator: posteriorCingulate.relativeIntensity > 0.9 ? 'normal' :
                         posteriorCingulate.relativeIntensity > 0.8 ? 'borderline' : 'atypical'
@@ -607,7 +606,7 @@ const AnalysisEngine = (() => {
                 {
                     title: 'Frontal Lobe',
                     detail: `Relative intensity: ${(frontal.relativeIntensity * 100).toFixed(1)}% of mean. ` +
-                        `Frontal lobe changes are tracked in Mosconi's research on ` +
+                        `Frontal lobe changes are tracked in published research on ` +
                         `brain aging and menopause-related metabolic shifts.`,
                     indicator: frontal.relativeIntensity > 0.9 ? 'normal' :
                         frontal.relativeIntensity > 0.8 ? 'borderline' : 'atypical'
@@ -631,7 +630,7 @@ const AnalysisEngine = (() => {
                 {
                     title: 'Temporal Lobe Symmetry',
                     detail: `Asymmetry index: ${(symmetry.temporalAsymmetry * 100).toFixed(1)}%. ` +
-                        `Temporal lobe asymmetry is particularly relevant to Mosconi's work ` +
+                        `Temporal lobe asymmetry is particularly relevant to published research ` +
                         `on medial temporal lobe and entorhinal cortex changes in early AD.`,
                     indicator: symmetry.temporalAsymmetry < 0.05 ? 'normal' :
                         symmetry.temporalAsymmetry < 0.10 ? 'borderline' : 'atypical'
@@ -647,7 +646,7 @@ const AnalysisEngine = (() => {
                     title: 'Brain Parenchyma Fraction',
                     detail: `${(atrophy.brainParenchymaFraction * 100).toFixed(1)}%. ` +
                         `This measures the ratio of brain tissue to total intracranial volume. ` +
-                        `Mosconi's research links reduced brain parenchyma to increased dementia risk. ` +
+                        `Published research links reduced brain parenchyma to increased dementia risk. ` +
                         `Mediterranean diet adherence has been associated with preserved brain volume.`,
                     indicator: atrophy.atrophyLevel === 'minimal' ? 'normal' :
                         atrophy.atrophyLevel === 'mild' ? 'borderline' : 'atypical'
@@ -671,7 +670,7 @@ const AnalysisEngine = (() => {
                     title: 'Tissue Homogeneity',
                     detail: `Score: ${texture.homogeneityScore.toFixed(1)}/100 (entropy: ${texture.entropy.toFixed(2)} bits). ` +
                         `Higher homogeneity in white matter regions suggests better microstructural ` +
-                        `integrity. Mosconi's research tracks white matter lesions and their ` +
+                        `integrity. Published research tracks white matter lesions and their ` +
                         `correlation with cognitive outcomes.`,
                     indicator: texture.homogeneityScore > 60 ? 'normal' :
                         texture.homogeneityScore > 40 ? 'borderline' : 'atypical'
@@ -684,11 +683,11 @@ const AnalysisEngine = (() => {
             const sex = metadata.patientSex.toUpperCase();
             if (sex === 'F') {
                 findings.push({
-                    category: 'Sex-Specific Context (Mosconi Women\'s Brain Research)',
+                    category: 'Sex-Specific Context (Women\'s Brain Research)',
                     items: [
                         {
                             title: 'Women\'s Brain Health Context',
-                            detail: `Mosconi's research at the Women's Brain Initiative has demonstrated ` +
+                            detail: `Research at the Women's Brain Initiative has demonstrated ` +
                                 `that the menopause transition is associated with significant changes in ` +
                                 `brain structure, connectivity, energy metabolism, and amyloid-β deposition. ` +
                                 `These findings suggest the perimenopause-to-menopause transition represents ` +
@@ -704,11 +703,11 @@ const AnalysisEngine = (() => {
     }
 
     function generateRecommendations(score, metadata) {
-        // Based on Mosconi's published nutrition and lifestyle research
+        // Based on published nutrition and lifestyle research
         const recommendations = [
             {
                 title: 'Mediterranean Diet',
-                detail: 'Mosconi\'s research demonstrates strong associations between Mediterranean diet ' +
+                detail: 'Strong associations exist between Mediterranean diet ' +
                     'adherence and reduced brain atrophy, lower amyloid biomarker burden, and preserved ' +
                     'brain glucose metabolism. Key components include vegetables, fruits, legumes, whole grains, ' +
                     'fish, and olive oil.'
@@ -721,7 +720,7 @@ const AnalysisEngine = (() => {
             {
                 title: 'Physical Activity',
                 detail: 'Regular aerobic exercise is associated with preserved brain volume and improved ' +
-                    'cerebral blood flow in Mosconi\'s research framework.'
+                    'cerebral blood flow in published brain health research.'
             },
             {
                 title: 'Cognitive Engagement',
@@ -747,7 +746,7 @@ const AnalysisEngine = (() => {
         if (metadata.patientSex && metadata.patientSex.toUpperCase() === 'F') {
             recommendations.push({
                 title: 'Hormone Health Monitoring',
-                detail: 'Mosconi\'s research highlights the importance of monitoring hormonal changes, ' +
+                detail: 'Published research highlights the importance of monitoring hormonal changes, ' +
                     'particularly during perimenopause. Discuss brain-protective strategies with your ' +
                     'healthcare provider during hormonal transitions.'
             });
@@ -758,7 +757,7 @@ const AnalysisEngine = (() => {
             if (age >= 40) {
                 recommendations.push({
                     title: 'Baseline Brain Imaging',
-                    detail: 'Mosconi\'s research supports establishing baseline brain imaging in midlife. ' +
+                    detail: 'Published research supports establishing baseline brain imaging in midlife. ' +
                         'Serial comparisons over time can detect subtle changes earlier than single-timepoint analysis.'
                 });
             }

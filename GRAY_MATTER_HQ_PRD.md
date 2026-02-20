@@ -16,7 +16,7 @@
    - 4.2 Input Pipelines
    - 4.3 MRI Viewer
    - 4.4 Analysis Engine
-   - 4.5 Mosconi Brain Health Score
+   - 4.5 Brain Health Score
    - 4.6 Volumetrics Dashboard
    - 4.7 Findings & Recommendations
    - 4.8 Session Persistence
@@ -29,9 +29,9 @@
 
 ## 1. Product Overview
 
-**Gray Matter HQ** is a browser-based brain MRI analysis dashboard built around the research framework of Dr. Lisa Mosconi (Weill Cornell Women's Brain Initiative). It enables users to upload raw MRI data or FreeSurfer segmentation outputs and receive a structured brain health report — including a composite score, sub-scores, regional volume metrics, and lifestyle recommendations — entirely within the browser, with no data ever leaving the user's device.
+**Gray Matter HQ** is a browser-based brain MRI analysis dashboard built around the brain health research framework of leading women's brain health researchers (Weill Cornell Women's Brain Initiative). It enables users to upload raw MRI data or FreeSurfer segmentation outputs and receive a structured brain health report — including a composite score, sub-scores, regional volume metrics, and lifestyle recommendations — entirely within the browser, with no data ever leaving the user's device.
 
-**Tagline:** Brain health analytics powered by the Mosconi Research Framework.
+**Tagline:** Personal brain and hormone intelligence dashboard.
 
 **Deployment:** Static site hosted on GitHub Pages. No server, no database, no backend.
 
@@ -44,7 +44,7 @@
 ### Goals
 
 - Provide a private, no-upload-required tool for individuals to visualize and interpret their own brain MRI data
-- Implement Dr. Lisa Mosconi's structural MRI biomarkers as the scoring framework
+- Implement published structural MRI biomarkers as the scoring framework
 - Support two input paths: raw MRI files (DICOM/NIfTI) and FreeSurfer volumetric outputs (`aseg.stats`)
 - Produce a single, interpretable composite Brain Health Score with transparent sub-score breakdowns
 - Display regional volumetric metrics with reference ranges and contextual research citations
@@ -172,7 +172,7 @@ The analysis engine (`analysis-engine.js`) operates on pixel-level data from DIC
 
 ---
 
-### 4.5 Mosconi Brain Health Score
+### 4.5 Brain Health Score
 
 A single composite integer (0–100) is the primary output of both pipelines.
 
@@ -212,7 +212,7 @@ Sub-score thresholds:
 **Composite formula:**
 `round((tissueBalance + symmetrySubScore + atrophyScore + 75) / 4)`
 
-The `+ 75` constant is a fixed placeholder for the texture sub-score, which cannot be derived from volumetric data. This is logged transparently in the DevTools console under `console.group('Mosconi Score Verification')`.
+The `+ 75` constant is a fixed placeholder for the texture sub-score, which cannot be derived from volumetric data. This is logged transparently in the DevTools console under `console.group('Brain Health Score Verification')`.
 
 #### Metric Reference Ranges (displayed in the comparison table):
 
@@ -247,7 +247,7 @@ Rendered when Pipeline B data is available (CSV or FreeSurfer upload).
 
 ### 4.7 Findings & Recommendations
 
-All findings are grouped into collapsible sections with inline Mosconi research citations.
+All findings are grouped into collapsible sections with inline research citations.
 
 **Findings sections:**
 
@@ -256,7 +256,7 @@ All findings are grouped into collapsible sections with inline Mosconi research 
 3. **Hemispheric Symmetry** — Overall symmetry score; temporal lobe asymmetry index; hippocampal L/R asymmetry (FreeSurfer)
 4. **Brain Atrophy Indicators** — Brain parenchyma fraction; CSF proportion; ventricular volume; eTIV
 5. **White Matter Characterization** — Tissue homogeneity / entropy score (DICOM only)
-6. **Sex-Specific Context** — Mosconi Women's Brain Initiative framing (shown only when DICOM metadata contains `patientSex = F`)
+6. **Sex-Specific Context** — Women's Brain Initiative framing (shown only when DICOM metadata contains `patientSex = F`)
 
 **Recommendations (always shown, 5 standard):**
 1. Mediterranean Diet
@@ -304,7 +304,7 @@ All findings are grouped into collapsible sections with inline Mosconi research 
 | `js/passcode.js` | Passcode gate, SHA-256 verification, Discord webhook notification |
 | `js/app.js` | Main app orchestration, DICOM/image upload flow, MRI viewer, analysis result rendering, FreeSurfer score computation (`buildResultsFromFreeSurfer`), session persistence |
 | `js/analysis-engine.js` | Pixel-level tissue segmentation, symmetry, texture, regional analysis, composite score computation for image-based inputs |
-| `js/freesurfer-handler.js` | `aseg.stats` parser, ROI aggregation, bridge to `VolumetricsDashboard.ingestRows` and `window.updateMosconiFromFreeSurfer` |
+| `js/freesurfer-handler.js` | `aseg.stats` parser, ROI aggregation, bridge to `VolumetricsDashboard.ingestRows` and `window.updateAnalysisFromFreeSurfer` |
 | `js/volumetrics-dashboard.js` | CSV ingestion, metric card rendering, sortable table, subject dropdown, auto-fetch of CSV/PNG from repo root |
 | `js/nifti-handler.js` | NIfTI header parsing, metadata display |
 
@@ -325,7 +325,7 @@ All findings are grouped into collapsible sections with inline Mosconi research 
 | 1 | **NRRD parsing is not implemented** | NRRD files are accepted but no metadata or pixel data is extracted | Use NIfTI or DICOM instead |
 | 2 | **NIfTI pixel rendering is not implemented** | NIfTI uploads show metadata only; the MRI viewer is hidden | Convert to DICOM for full viewer experience |
 | 3 | **Regional analysis uses fixed bounding boxes** | Hippocampal, posterior cingulate, and frontal region intensities are only anatomically correct for scans in standard axial orientation/FOV | Use FreeSurfer `aseg.stats` for anatomically accurate regional volumes |
-| 4 | **FreeSurfer composite uses a `+75` texture placeholder** | The texture sub-score is not computable from volumetric data; a fixed 75/100 is assumed | Noted transparently in the DevTools Mosconi Score Verification log |
+| 4 | **FreeSurfer composite uses a `+75` texture placeholder** | The texture sub-score is not computable from volumetric data; a fixed 75/100 is assumed | Noted transparently in the DevTools Brain Health Score Verification log |
 | 5 | **Passcode is client-side only** | A user inspecting the page source can extract the SHA-256 hash or bypass the overlay via browser DevTools | Not designed for high-security use cases; adequate for limiting casual access |
 | 6 | **LocalStorage data is unencrypted** | DICOM metadata (which may include patient name, DOB, etc.) is stored in plaintext in the browser | Users should avoid using identifiable DICOM files on shared computers |
 | 7 | **Auto-load fails on `file://` protocol** | `brain_metrics_summary.csv` cannot be fetched when `index.html` is opened directly from the filesystem | Use `python -m http.server` or VS Code Live Server for local preview |
@@ -358,8 +358,8 @@ The following capabilities are **not currently implemented** and represent poten
 | **Longitudinal tracking** | Compare two time-point scans (or two `aseg.stats` files) and display volume change over time | High clinical value for monitoring |
 | **Reference population normalization** | Normalize volumetric metrics against an age/sex-matched reference distribution | Would require embedding a normative lookup table |
 | **Texture sub-score from aseg.stats** | Replace the hardcoded `+75` placeholder with a meaningful estimate from white matter hyperintensity volume (if available in the stats file) | Would improve composite score accuracy for FreeSurfer-based inputs |
-| **Lh/rh cortical parcellation** | Ingest `aparc.stats` (Desikan-Killiany parcellation) for region-specific cortical thickness and surface area metrics | Mosconi's work specifically highlights entorhinal cortex and posterior cingulate |
-| **PET metabolic data overlay** | Accept FDG-PET SUV data and overlay regional metabolism values on the structural map | Core to Mosconi's original research methodology |
+| **Lh/rh cortical parcellation** | Ingest `aparc.stats` (Desikan-Killiany parcellation) for region-specific cortical thickness and surface area metrics | Published research specifically highlights entorhinal cortex and posterior cingulate |
+| **PET metabolic data overlay** | Accept FDG-PET SUV data and overlay regional metabolism values on the structural map | Core to the original research methodology |
 | **PHI de-identification warning** | Detect DICOM files with populated patient name / DOB fields and display a warning before analysis | Privacy improvement |
 | **Offline PWA mode** | Cache the app shell as a Progressive Web App for fully offline operation | Would eliminate the CDN dependency on `dicom-parser` and `nifti-reader-js` |
 | **Print-optimized stylesheet** | CSS `@media print` styles for clean browser-print output of the analysis panel | Low-effort, high-utility for sharing with a clinician |
